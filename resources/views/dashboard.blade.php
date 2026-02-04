@@ -25,8 +25,8 @@
                 </a>
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
-                    <i class="bi bi bi-box"></i>
-                    Assets
+                    <i class="bi bi-bar-chart-fill"></i>
+                    Metrics
                 </a>
                 {{-- <a class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700" href="#">
                     <i class="bi bi-card-list"></i>
@@ -34,29 +34,34 @@
                 </a> --}}
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
-                    <i class="bi bi-upc-scan"></i>
-                    Scanner
+                    <i class="bi bi-suitcase-lg"></i>
+                    Jobs
                 </a>
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
-                    <i class="bi bi-card-text"></i>
-                    Licenses
+                    <i class="bi bi-openai"></i>
+                    AI Matching
                 </a>
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
-                    <i class="bi bi-folder"></i>
-                    Clearance
+                    <i class="bi bi-calendar-event"></i>
+                    Appointments
                 </a>
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
-                    <i class="bi bi-person"></i>
-                    Employees
+                    <i class="bi bi-person-check-fill"></i>
+                    Deployment
                 </a>
-                {{-- <a href="{{ route('location.index') }}"
+                <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
                     <i class="bi bi-building"></i>
-                    Location
-                </a> --}}
+                    Companies
+                </a>
+                <a class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700"
+                    href="#">
+                    <i class="bi bi-receipt"></i>
+                    Billing
+                </a>
                 <a class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700"
                     href="#">
                     <i class="bi bi-bar-chart"></i>
@@ -65,7 +70,7 @@
                 <a href=""
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
                     <i class="bi bi-gear"></i>
-                    Setup
+                    Settings
                 </a>
             </div>
         </div>
