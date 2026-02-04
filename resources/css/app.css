@@ -1,3 +1,6 @@
+@import "../bootstrap-icons/bootstrap-icons.css";
+@import "flowbite/src/themes/default";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
