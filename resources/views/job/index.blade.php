@@ -11,7 +11,7 @@
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">Jobs Management</h1>
                 <p class="text-sm text-gray-500">
-                    Manage jobs
+                    Manage job openings and requirements.
                 </p>
             </div>
             <div class="flex items-center gap-2 mt-0">

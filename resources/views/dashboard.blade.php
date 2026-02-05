@@ -67,7 +67,7 @@
                     <i class="bi bi-bar-chart"></i>
                     Reports
                 </a>
-                <a href=""
+                <a href="{{ route('setting.index') }}"
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
                     <i class="bi bi-gear"></i>
                     Settings

@@ -28,7 +28,7 @@ class CompanyController extends Controller
             $query->orWhere('contact_email', 'like', '%' . $search . '%');
         }
 
-        if ($status) {
+        if ($status !== null) {
             $query->where('status', $status);
         }
 

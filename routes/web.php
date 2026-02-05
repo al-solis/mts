@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\SettingController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,6 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('company', CompanyController::class)->except(['destroy']);
 
     Route::resource('job', JobController::class)->except(['destroy']);
+
+    Route::resource('setting', SettingController::class)->except(['destroy']);
 });
 
 require __DIR__ . '/auth.php';
