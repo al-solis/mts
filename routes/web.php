@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ResumeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -25,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('job', JobController::class)->except(['destroy']);
 
     Route::resource('setting', SettingController::class)->except(['destroy']);
+
+    Route::post('resume/upload-match', [ResumeController::class, 'upload'])->name('resume.upload.match');
+    Route::resource('matching', ResumeController::class)->except(['destroy']);
+
 });
 
 require __DIR__ . '/auth.php';

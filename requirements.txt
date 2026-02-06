@@ -1,1 +1,5 @@
-composer require smalot/pdfparser phpoffice/phpword
+composer require smalot/pdfparser phpoffice/phpword 
+composer require openai-php/client --dev
+php artisan vendor:publish --provider="OpenAI\Laravel\ServiceProvider"
+
+extension=zip

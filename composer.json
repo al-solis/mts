@@ -11,7 +11,10 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "openai-php/laravel": "^0.18.0",
+        "phpoffice/phpword": "^1.1",
+        "smalot/pdfparser": "^2.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -22,6 +25,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "openai-php/client": "^0.18.0",
         "pestphp/pest": "^3.8",
         "pestphp/pest-plugin-laravel": "^3.2"
     },
