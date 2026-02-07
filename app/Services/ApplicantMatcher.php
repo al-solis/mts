@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Job;
+use App\Models\JobPosting;
 use App\Models\Resume;
 use App\Services\AIEmbeddingService;
 
@@ -18,7 +18,7 @@ class ApplicantMatcher
     /**
      * Calculate full match breakdown and total percentage
      */
-    public function calculateMatch(Job $job, Resume $resume): array
+    public function calculateMatch(JobPosting $job, Resume $resume): array
     {
         // 1️⃣ Education Match (20%)
         $educationScore = $this->educationScore($job->required_education, $resume->education_level, 20);

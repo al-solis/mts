@@ -25,3 +25,70 @@ post_max_size = 50M
 max_execution_time = 300
 max_input_time = 300
 memory_limit = 512M
+
+
+# 1. Education Match (30% weight)
+# This measures how closely the applicant’s educational background matches the job requirement.
+# What it checks:
+# Degree level (e.g., Bachelor’s, Master’s)
+# Field of study (e.g., IT, Computer Science, Engineering)
+# Required vs. preferred education
+
+# Why it’s 30%:
+# Education sets the foundation for the role. If the job explicitly requires a certain degree or field, 
+# this becomes a strong indicator of baseline suitability.
+
+# Example:
+# Required: BS in IT
+# Applicant: BS in Computer Science → High score
+# Applicant: BA in History → Low score
+
+# 2. Years of Experience (25% weight)
+# This evaluates how many years of professional experience the applicant has compared to what the job requires.
+
+# What it checks:
+
+# Total years in relevant roles
+# Minimum experience threshold
+
+# Why it’s 25%:
+# Experience often correlates with practical exposure and maturity, but it’s slightly less important than education fit in roles that require formal training.
+
+# Example:
+# Required: 3 years
+# Applicant has 5 years → Full or near-full score
+# Applicant has 1 year → Partial score
+
+# 3. Work Experience Relevance (25% weight)
+# This measures how closely the applicant’s past job roles align with the current job description.
+# What it checks:
+# Similar job titles
+# Similar responsibilities
+
+# Industry relevance
+# Overlap in tools, systems, or technologies
+
+# Why it’s 25%:
+# Not all experience is equal. Someone with fewer years but highly relevant experience can outperform someone with many years in unrelated roles.
+
+# Example:
+# Job: Laravel Developer
+# Applicant worked as a PHP/Laravel Developer → High score
+# Applicant worked as a Network Technician → Low score
+
+# 4. General Qualifications (20% weight)
+# This covers additional requirements and soft/technical skills not captured above.
+# What it includes:
+
+# Certifications
+# Technical skills (e.g., SQL, Laravel, Python)
+# Soft skills (communication, leadership)
+# Training, seminars, licenses
+
+# Why it’s 20%:
+# These factors enhance a candidate’s profile but usually don’t override core requirements like education or experience.
+
+# Example:
+# Has required certifications → Higher score
+
+# Lacks key skills → Lower score

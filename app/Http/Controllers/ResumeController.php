@@ -8,6 +8,7 @@ use App\Services\AI\EmbeddingService;
 use App\Services\AI\ResumeTextExtractor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Models\Resume;
 use App\Models\JobPosting;
 use App\Models\setting;
@@ -41,9 +42,9 @@ class ResumeController extends Controller
                     'job' => $job->title,
                     'education' => $resume->education_percentage,
                     'experience' => $resume->experience_percentage,
-                    'skills' => $resume->skills_percentage,
-                    'certifications' => $resume->certifications_percentage,
+                    'general' => $resume->general_percentage ?? 0,
                     'match' => $resume->match_percentage,
+                    'relevance' => $resume->relevance_percentage ?? 0,
                     'status' => $resume->status,
                     'passing_threshold' => $passingThreshold,
                     'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
@@ -79,12 +80,12 @@ class ResumeController extends Controller
             $validated = $request->validate([
                 'job_id' => 'required|exists:job_postings,id',
                 'resumes' => 'required|array|max:10',
-                'resumes.*' => 'file|mimes:pdf,doc,docx,txt|max:51200',
+                // 'resumes.*' => 'file|mimes:pdf,doc,docx,txt|max:51200',
             ]);
 
             Log::info('Validation passed', $validated);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             Log::error('Validation failed', [
                 'errors' => $e->errors(),
                 'request_data' => $request->all()
@@ -164,12 +165,15 @@ class ResumeController extends Controller
                     'skills' => json_encode($data['skills'] ?? []),
                     'certifications' => json_encode($data['certifications'] ?? []),
                     'work_history' => json_encode($data['work_history'] ?? []),
+                    'soft_skills' => json_encode($data['soft_skills'] ?? []),
                     'raw_text' => $text,
                     'embedding' => json_encode($embedder->embed($text)),
                     'education_percentage' => $matchResult['education_percentage'],
                     'experience_percentage' => $matchResult['experience_percentage'],
-                    'skills_percentage' => $matchResult['skills_percentage'],
-                    'certifications_percentage' => $matchResult['certifications_percentage'],
+                    'skills_percentage' => $matchResult['skills_percentage'] ?? 0,
+                    'certifications_percentage' => $matchResult['certifications_percentage'] ?? 0,
+                    'relevance_percentage' => $matchResult['relevance_percentage'] ?? 0,
+                    'general_percentage' => $matchResult['general_percentage'] ?? 0,
                     'match_percentage' => $matchResult['total_percentage'],
                     'status' => $status,
                     'created_by' => Auth::id(),
@@ -183,7 +187,10 @@ class ResumeController extends Controller
                     'experience' => round($matchResult['experience_percentage'], 2),
                     'skills' => round($matchResult['skills_percentage'], 2),
                     'certifications' => round($matchResult['certifications_percentage'], 2),
+                    'relevance' => round($matchResult['relevance_percentage'] ?? 0, 2),
+                    'general_percentage' => round($matchResult['general_percentage'], 2),
                     'match' => round($matchResult['total_percentage'], 2),
+                    'soft_skills' => round($matchResult['soft_skills_percentage'], 2),
                     'status' => $status,
                     'passing_threshold' => $passingThreshold,
                 ];
@@ -257,110 +264,127 @@ class ResumeController extends Controller
 
     private function calculateMatch($data, $job, $settings)
     {
-        // Debug the data structure
-        Log::info('AI Extracted Data Structure', [
-            'education_type' => gettype($data['education'] ?? 'not set'),
-            'education_value' => $data['education'] ?? 'not set',
-            'skills_type' => gettype($data['skills'] ?? 'not set'),
-            'skills_value' => $data['skills'] ?? 'not set',
-            'certifications_type' => gettype($data['certifications'] ?? 'not set'),
-            'certifications_value' => $data['certifications'] ?? 'not set',
-        ]);
-
-        // Calculate education match
-        $educationPercentage = $this->matchEducation($data['education'] ?? [], $job->qualification);
-
-        // Calculate experience match
-        $experiencePercentage = $this->matchExperience($data['years_experience'] ?? 0, $job);
-
-        // Calculate skills match
-        $skillsPercentage = $this->matchSkills($data['skills'] ?? [], $job->skill);
-
-        // Calculate certifications match
-        $certificationsPercentage = $this->matchCertifications($data['certifications'] ?? []);
+        // Calculate each component with their respective weights
+        $educationScore = $this->matchEducation($data['education'] ?? [], $job->qualification);
+        $experienceScore = $this->matchExperience($data['years_experience'] ?? 0, $job);
+        $relevanceScore = $this->matchWorkExperienceRelevance($data['work_history'] ?? [], $job);
+        $generalScore = $this->matchGeneralQualifications($data, $job);
 
         // Apply weights from settings
         $total = (
-            ($educationPercentage * ($settings->education / 100)) +
-            ($experiencePercentage * ($settings->years_of_experience / 100)) +
-            ($skillsPercentage * ($settings->skills / 100)) +
-            ($certificationsPercentage * ($settings->certifications / 100))
+            ($educationScore * ($settings->education / 100)) +
+            ($experienceScore * ($settings->years_of_experience / 100)) +
+            ($relevanceScore * ($settings->work_experience_relevance / 100)) +
+            ($generalScore * ($settings->general / 100))
         );
 
         Log::info('Match Calculation Results', [
-            'education' => $educationPercentage,
-            'experience' => $experiencePercentage,
-            'skills' => $skillsPercentage,
-            'certifications' => $certificationsPercentage,
+            'education' => $educationScore,
+            'experience' => $experienceScore,
+            'relevance' => $relevanceScore,
+            'general' => $generalScore,
             'total' => $total
         ]);
 
         return [
-            'education_percentage' => $educationPercentage,
-            'experience_percentage' => $experiencePercentage,
-            'skills_percentage' => $skillsPercentage,
-            'certifications_percentage' => $certificationsPercentage,
+            'education_percentage' => $educationScore,
+            'experience_percentage' => $experienceScore,
+            'relevance_percentage' => $relevanceScore,
+            'general_percentage' => $generalScore,
             'total_percentage' => $total
         ];
     }
 
-    private function matchEducation($resumeEducation, $jobQualification)
+    private function matchEducation($resumeEducation, $jobQualification): float
     {
-        // Ensure $resumeEducation is an array
-        if (!is_array($resumeEducation)) {
-            $resumeEducation = [];
-        }
+        // Parse job qualification for education requirements
+        $jobQualification = strtolower($jobQualification);
 
-        // Convert education array to a single lowercase string
-        $educationText = '';
-        foreach ($resumeEducation as $education) {
-            if (is_array($education)) {
-                // If education item is an array (like ["institution": "...", "degree": "..."])
-                foreach ($education as $key => $value) {
-                    if (is_string($value)) {
-                        $educationText .= ' ' . strtolower($value);
+        // Check for degree requirements
+        $degreeKeywords = [
+            'phd' => 100,
+            'doctorate' => 100,
+            'master' => 80,
+            'masters' => 80,
+            'bachelor' => 60,
+            'bachelors' => 60,
+            'bs' => 60,
+            'ba' => 60,
+            'associate' => 40,
+            'diploma' => 30,
+            'high school' => 20,
+            'secondary' => 20,
+            'primary' => 10,
+            'elementary' => 10,
+            'none' => 0,
+        ];
+
+        // Check for field requirements
+        $fieldKeywords = [
+            'computer science' => ['cs', 'computer', 'software', 'programming'],
+            'information technology' => ['it', 'information', 'technology'],
+            'engineering' => ['engineering', 'engineer'],
+            'business' => ['business', 'administration', 'management'],
+            'science' => ['science', 'scientific'],
+        ];
+
+        $bestMatch = 0;
+
+        foreach ($resumeEducation as $edu) {
+            $eduText = strtolower(($edu['degree'] ?? '') . ' ' . ($edu['field'] ?? ''));
+            $score = 0;
+
+            // Degree level matching (40% weight)
+            foreach ($degreeKeywords as $keyword => $points) {
+                if (strpos($eduText, $keyword) !== false) {
+                    $score += $points * 0.4;
+                    break;
+                }
+            }
+
+            // Field of study matching (60% weight)
+            foreach ($fieldKeywords as $mainField => $synonyms) {
+                if (strpos($jobQualification, $mainField) !== false) {
+                    // Job requires this field
+                    foreach ($synonyms as $synonym) {
+                        if (strpos($eduText, $synonym) !== false) {
+                            $score += 100 * 0.6;
+                            break 2;
+                        }
                     }
                 }
-            } elseif (is_string($education)) {
-                $educationText .= ' ' . strtolower($education);
             }
-        }
 
-        $qualificationText = strtolower($jobQualification);
+            // Keyword matching in qualification text
+            $words = array_filter(
+                preg_split('/\s+/', $jobQualification),
+                function ($word) {
+                    return strlen($word) > 3;
+                }
+            );
 
-        // If no education text or qualification, return 0
-        if (empty(trim($educationText)) || empty(trim($qualificationText))) {
-            return 0;
-        }
-
-        // Split qualification into words
-        $qualificationWords = array_filter(
-            preg_split('/\s+/', $qualificationText),
-            function ($word) {
-                return strlen($word) > 3; // Only consider words longer than 3 characters
+            $matches = 0;
+            foreach ($words as $word) {
+                if (strpos($eduText, $word) !== false) {
+                    $matches++;
+                }
             }
-        );
 
-        if (empty($qualificationWords)) {
-            return 0;
+            $keywordScore = $words ? ($matches / count($words)) * 100 : 0;
+            $score = max($score, $keywordScore * 0.3); // 30% weight for general keyword matching
+
+            $bestMatch = max($bestMatch, $score);
         }
 
-        $matches = 0;
-        foreach ($qualificationWords as $word) {
-            if (strpos($educationText, $word) !== false) {
-                $matches++;
-            }
-        }
-
-        return ($matches / count($qualificationWords)) * 100;
+        return min($bestMatch, 100);
     }
 
-    private function matchExperience($yearsExperience, $job)
+    private function matchExperience($yearsExperience, $job): float
     {
-        // Extract years from job description if possible
+        // Extract years from job description
         preg_match('/(\d+)\+?\s*(years?|yrs?)/i', $job->description . ' ' . $job->qualification, $matches);
 
-        $requiredYears = isset($matches[1]) ? (int) $matches[1] : 2; // Default to 2 years
+        $requiredYears = isset($matches[1]) ? (int) $matches[1] : 2;
 
         if ($yearsExperience >= $requiredYears) {
             return 100;
@@ -371,80 +395,108 @@ class ResumeController extends Controller
         return 0;
     }
 
-    private function matchSkills($resumeSkills, $jobSkills)
+    private function matchWorkExperienceRelevance($workHistory, $job): float
     {
-        // Ensure both are arrays
-        if (!is_array($resumeSkills)) {
-            $resumeSkills = [];
-        }
+        $jobTitle = strtolower($job->title);
+        $jobDescription = strtolower($job->description);
+        $jobSkills = strtolower($job->skill);
 
-        $jobSkillArray = array_map('strtolower', array_filter(
-            explode(',', $jobSkills),
-            function ($skill) {
-                return !empty(trim($skill));
-            }
-        ));
+        $totalRelevance = 0;
+        $jobCount = 0;
 
-        // Convert resume skills to lowercase strings
-        $resumeSkillArray = [];
-        foreach ($resumeSkills as $skill) {
-            if (is_string($skill)) {
-                $resumeSkillArray[] = strtolower(trim($skill));
-            } elseif (is_array($skill)) {
-                foreach ($skill as $key => $value) {
-                    if (is_string($value)) {
-                        $resumeSkillArray[] = strtolower(trim($value));
-                    }
+        foreach ($workHistory as $jobExp) {
+            $relevance = 0;
+            $jobTitleExp = strtolower($jobExp['job_title'] ?? '');
+            $responsibilities = implode(' ', array_map('strtolower', $jobExp['responsibilities'] ?? []));
+            $technologies = implode(' ', array_map('strtolower', $jobExp['technologies'] ?? []));
+
+            // Title similarity (30%)
+            similar_text($jobTitle, $jobTitleExp, $titleSimilarity);
+            $relevance += $titleSimilarity * 0.3;
+
+            // Responsibility keyword matching (40%)
+            $jobKeywords = array_filter(
+                preg_split('/\s+/', $jobDescription),
+                function ($word) {
+                    return strlen($word) > 4;
+                }
+            );
+
+            $keywordMatches = 0;
+            foreach ($jobKeywords as $keyword) {
+                if (strpos($responsibilities, $keyword) !== false) {
+                    $keywordMatches++;
                 }
             }
+
+            $keywordScore = $jobKeywords ? ($keywordMatches / count($jobKeywords)) * 100 : 0;
+            $relevance += $keywordScore * 0.4;
+
+            // Technology/skills matching (30%)
+            $jobSkillArray = array_map('trim', explode(',', $jobSkills));
+            $techMatches = 0;
+
+            foreach ($jobSkillArray as $skill) {
+                if (strpos($technologies, strtolower($skill)) !== false) {
+                    $techMatches++;
+                }
+            }
+
+            $techScore = $jobSkillArray ? ($techMatches / count($jobSkillArray)) * 100 : 0;
+            $relevance += $techScore * 0.3;
+
+            $totalRelevance += min($relevance, 100);
+            $jobCount++;
         }
 
-        if (empty($jobSkillArray)) {
-            return 0;
-        }
-
-        $matches = array_intersect($jobSkillArray, array_unique($resumeSkillArray));
-
-        return (count($matches) / count($jobSkillArray)) * 100;
+        return $jobCount > 0 ? ($totalRelevance / $jobCount) : 0;
     }
 
-    private function matchCertifications($resumeCertifications)
+    private function matchGeneralQualifications($data, $job): float
     {
-        // Ensure it's an array
-        if (!is_array($resumeCertifications)) {
-            $resumeCertifications = [];
-        }
+        $score = 0;
 
-        // Count actual certification strings
-        $certCount = 0;
-        foreach ($resumeCertifications as $cert) {
-            if (is_string($cert) && !empty(trim($cert))) {
-                $certCount++;
-            } elseif (is_array($cert)) {
-                foreach ($cert as $key => $value) {
-                    if (is_string($value) && !empty(trim($value))) {
-                        $certCount++;
-                    }
-                }
+        // Skills matching (50% weight)
+        $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill)));
+        $resumeSkills = [];
+
+        foreach ($data['skills'] ?? [] as $skillGroup) {
+            foreach ($skillGroup['items'] ?? [] as $skill) {
+                $resumeSkills[] = strtolower(trim($skill));
             }
         }
 
-        if ($certCount >= 5)
-            return 100;
-        if ($certCount >= 3)
-            return 75;
-        if ($certCount >= 1)
-            return 50;
+        $skillMatches = array_intersect($jobSkills, array_unique($resumeSkills));
+        $skillScore = $jobSkills ? (count($skillMatches) / count($jobSkills)) * 100 : 0;
+        $score += $skillScore * 0.5;
 
-        return 0;
+        // Certifications (30% weight)
+        $certCount = count($data['certifications'] ?? []);
+        $certScore = 0;
+
+        if ($certCount >= 5)
+            $certScore = 100;
+        elseif ($certCount >= 3)
+            $certScore = 75;
+        elseif ($certCount >= 1)
+            $certScore = 50;
+
+        $score += $certScore * 0.3;
+
+        // Soft skills (20% weight)
+        $softSkills = $data['soft_skills'] ?? [];
+        $softSkillScore = count($softSkills) > 5 ? 100 : (count($softSkills) * 20);
+        $score += $softSkillScore * 0.2;
+
+        return min($score, 100);
     }
 
     private function getPassingThreshold($job, $settings)
     {
-        if ($job->threshold_type === 'custom') {
-            return $job->passing_threshold;
-        }
+        // if ($job->threshold_type === 'custom') {
+        //     return $job->passing_threshold;
+        // }
 
-        return $settings->{$job->threshold_type} ?? 70;
+        return $settings->minimum_match_percentage ?? 70;
     }
 }

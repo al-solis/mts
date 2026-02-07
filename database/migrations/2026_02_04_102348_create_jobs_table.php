@@ -14,10 +14,10 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies');
-            $table->string('title', 255);
-            $table->string('description');
-            $table->string('qualification');
-            $table->string('skill');
+            $table->string('title');
+            $table->text('description');
+            $table->text('qualification');
+            $table->text('skill');
             $table->string('salary_range', 100);
             $table->integer('status')->default(1)->comment('1=Active, 0=Inactive, 2=Paused, 3=Closed, 4=Cancelled');
             $table->decimal('passing_threshold')->default(70);

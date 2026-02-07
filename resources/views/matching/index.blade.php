@@ -60,6 +60,8 @@
                     <option value="{{ $job->id }}">{{ $job->title }} ({{ $job->company->name }})</option>
                 @endforeach
             </select>
+            {{-- Job info container --}}
+            <div id="jobInfoContainer" class="mt-2"></div>
         </div>
 
         {{-- Resume Upload --}}
@@ -114,8 +116,8 @@
                         <th class="border px-2 py-1">Job Title</th>
                         <th class="border px-2 py-1">Education</th>
                         <th class="border px-2 py-1">Experience</th>
-                        <th class="border px-2 py-1">Skills</th>
-                        <th class="border px-2 py-1">Certifications</th>
+                        <th class="border px-2 py-1">Relevance</th>
+                        <th class="border px-2 py-1">General</th>
                         <th class="border px-2 py-1">Match %</th>
                     </tr>
                 </thead>
@@ -231,8 +233,8 @@
                 // Safely handle null/undefined values
                 const education = parseFloat(row.education) || 0;
                 const experience = parseFloat(row.experience) || 0;
-                const skills = parseFloat(row.skills) || 0;
-                const certifications = parseFloat(row.certifications) || 0;
+                const relevance = parseFloat(row.relevance) || 0;
+                const general = parseFloat(row.general) || 0;
                 const match = parseFloat(row.match) || 0;
                 const passingThreshold = parseFloat(row.passing_threshold) || 70;
 
@@ -251,8 +253,8 @@
                 <td class="border px-3 py-2">${row.job || 'Unknown Job'}</td>
                 <td class="border px-3 py-2 text-center">${education.toFixed(2)}%</td>
                 <td class="border px-3 py-2 text-center">${experience.toFixed(2)}%</td>
-                <td class="border px-3 py-2 text-center">${skills.toFixed(2)}%</td>
-                <td class="border px-3 py-2 text-center">${certifications.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center">${relevance.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center">${general.toFixed(2)}%</td>
                 <td class="border px-3 py-2 text-center font-semibold ${match >= passingThreshold ? 'text-green-600' : 'text-red-600'}">
                     ${match.toFixed(2)}%
                 </td>
@@ -417,5 +419,51 @@
                 notification.remove();
             }, 5000);
         }
+
+        // Event listener for job selection
+        jobSelect.addEventListener('change', function() {
+            const jobId = this.value;
+            const jobInfoContainer = document.getElementById('jobInfoContainer');
+
+            if (jobId) {
+                resumeInput.disabled = false;
+                uploadBtn.disabled = false;
+                selectedJob.value = jobId;
+
+                // Load existing resumes for this job
+                loadJobResumes(jobId);
+
+                // Update job info display
+                const selectedOption = this.options[this.selectedIndex];
+                const jobText = selectedOption.textContent;
+
+                if (jobInfoContainer) {
+                    jobInfoContainer.innerHTML = `
+                <div id="jobInfo" class="text-sm">
+                    <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                        <div class="font-medium">Selected Job:</div>
+                        <div class="mt-1">${jobText}</div>
+                        <div id="jobCountInfo" class="mt-1 text-xs text-blue-600"></div>
+                    </div>
+                </div>
+            `;
+                }
+            } else {
+                resumeInput.disabled = true;
+                uploadBtn.disabled = true;
+                resultsBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4 text-gray-400">
+                    Select a job to view previous results
+                </td>
+            </tr>
+        `;
+
+                // Clear job info
+                if (jobInfoContainer) {
+                    jobInfoContainer.innerHTML = '';
+                }
+            }
+        });
     </script>
 @endsection

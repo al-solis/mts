@@ -18,9 +18,11 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->integer('years_experience')->default(0);
             $table->json('education')->nullable();
+            $table->json('work_history')->nullable();
+            $table->json('general_qualifications')->nullable();
             $table->json('skills')->nullable();
             $table->json('certifications')->nullable();
-            $table->json('work_history')->nullable();
+            $table->json('soft_skills')->nullable();
             $table->text('raw_text');
             $table->json('embedding')->nullable();
 
@@ -28,6 +30,9 @@ return new class extends Migration {
             $table->decimal('experience_percentage', 5, 2)->default(0);
             $table->decimal('skills_percentage', 5, 2)->default(0);
             $table->decimal('certifications_percentage', 5, 2)->default(0);
+            $table->decimal('soft_skills_percentage', 5, 2)->default(0);
+            $table->decimal('relevance_percentage', 5, 2)->default(0);
+            $table->decimal('general_percentage', 5, 2)->default(0);
             $table->decimal('match_percentage', 5, 2)->default(0);
             $table->enum('status', ['Passed', 'Failed'])->default('Failed');
             $table->unsignedBigInteger('created_by');
