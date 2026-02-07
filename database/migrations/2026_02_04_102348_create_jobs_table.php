@@ -20,7 +20,8 @@ return new class extends Migration {
             $table->string('skill');
             $table->string('salary_range', 100);
             $table->integer('status')->default(1)->comment('1=Active, 0=Inactive, 2=Paused, 3=Closed, 4=Cancelled');
-
+            $table->decimal('passing_threshold')->default(70);
+            $table->string('threshold_type')->default('custom');
             $table->unsignedBigInteger('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->unsignedBigInteger('updated_by')->nullable();

@@ -2,4 +2,26 @@ composer require smalot/pdfparser phpoffice/phpword
 composer require openai-php/client --dev
 php artisan vendor:publish --provider="OpenAI\Laravel\ServiceProvider"
 
+
+https://github.com/UB-Mannheim/tesseract/wiki
+
+https://github.com/oschwartz10612/poppler-windows
+extract to: C:\poppler
+add to Path: C:\poppler\Library\bin
+
+#Install the packages
+composer require spatie/pdf-to-image
+composer require thiagoalessio/tesseract_ocr
+# Update composer.json with required packages
+composer require phpoffice/phpword:^0.18.3
+composer require smalot/pdfparser:^2.0
+composer require spatie/pdf-to-image:^2.4
+composer require thiagoalessio/tesseract_ocr:^2.12
+
+# In php.ini
 extension=zip
+upload_max_filesize = 50M
+post_max_size = 50M
+max_execution_time = 300
+max_input_time = 300
+memory_limit = 512M

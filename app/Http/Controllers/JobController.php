@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\job;
+use App\Models\JobPosting;
 use App\Models\company;
+use App\Models\setting;
+use Illuminate\Support\Facades\Auth;
 
 class JobController extends Controller
 {
@@ -15,17 +17,17 @@ class JobController extends Controller
         $status = $request->input('status');
         $searchloc = $request->input('searchloc');
 
-        $totalJobs = Job::count();
-        $inactiveJobs = Job::where('status', '0')->count();
-        $activeJobs = Job::where('status', '1')->count();
-        $pausedJobs = Job::where('status', '2')->count();
-        $closedJobs = Job::where('status', '3')->count();
-        $cancelledJobs = Job::where('status', '4')->count();
+        $totalJobs = JobPosting::count();
+        $inactiveJobs = JobPosting::where('status', '0')->count();
+        $activeJobs = JobPosting::where('status', '1')->count();
+        $pausedJobs = JobPosting::where('status', '2')->count();
+        $closedJobs = JobPosting::where('status', '3')->count();
+        $cancelledJobs = JobPosting::where('status', '4')->count();
 
         $companies = Company::where('status', '1')
             ->orderBy('name')->get();
 
-        $query = Job::with('company');
+        $query = JobPosting::with('company');
 
         if ($search) {
             $query->where('title', 'like', '%' . $search . '%')
@@ -65,7 +67,10 @@ class JobController extends Controller
             'status' => 'required|in:0,1,2,3,4',
         ]);
 
-        Job::create([
+        $settings = Setting::first();
+        $passingThreshold = $settings ? $settings->minimum_match_percentage : 70;
+
+        JobPosting::create([
             'company_id' => $request->input('company_id'),
             'title' => $request->input('title'),
             'description' => $request->input('description'),
@@ -73,7 +78,9 @@ class JobController extends Controller
             'skill' => $request->input('skill'),
             'salary_range' => $request->input('salary'),
             'status' => $request->input('status'),
-            'created_by' => auth()->id(),
+            'passing_threshold' => $passingThreshold,  // Default threshold
+            'threshold_type' => 'custom',  // Default type
+            'created_by' => Auth::id(),
             'created_at' => now(),
         ]);
 
@@ -92,7 +99,7 @@ class JobController extends Controller
             'edit_status' => 'required|in:0,1,2,3,4',
         ]);
 
-        $job = Job::findOrFail($id);
+        $job = JobPosting::findOrFail($id);
         $job->update([
             'company_id' => $request->input('original_company_id'),
             'title' => $request->input('edit_title'),
@@ -101,7 +108,7 @@ class JobController extends Controller
             'skill' => $request->input('edit_skill'),
             'salary_range' => $request->input('edit_salary'),
             'status' => $request->input('edit_status'),
-            'updated_by' => auth()->id(),
+            'updated_by' => Auth::id(),
             'updated_at' => now(),
         ]);
 
@@ -110,7 +117,7 @@ class JobController extends Controller
 
     public function getJobCount($companyId)
     {
-        $jobCount = Job::where('company_id', $companyId)
+        $jobCount = JobPosting::where('company_id', $companyId)
             ->whereIn('status', ['1', '2'])
             ->count();
         return response()->json(['jobCount' => $jobCount]);

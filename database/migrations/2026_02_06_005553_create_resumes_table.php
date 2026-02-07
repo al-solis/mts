@@ -12,20 +12,27 @@ return new class extends Migration {
     {
         Schema::create('resumes', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('job_id');
-            $table->foreign('job_id')->references('id')->on('job_postings');
+            $table->unsignedBigInteger('job_posting_id');
+            $table->foreign('job_posting_id')->references('id')->on('job_postings');
             $table->string('applicant_name');
-            $table->string('applicant_email')->nullable();
-            $table->integer('years_of_experience')->nullable();
-            $table->string('education')->nullable();
+            $table->string('email')->nullable();
+            $table->integer('years_experience')->default(0);
+            $table->json('education')->nullable();
             $table->json('skills')->nullable();
             $table->json('certifications')->nullable();
             $table->json('work_history')->nullable();
             $table->text('raw_text');
             $table->json('embedding')->nullable();
-            $table->unsignedBigInteger('created_by')->nullable();
+
+            $table->decimal('education_percentage', 5, 2)->default(0);
+            $table->decimal('experience_percentage', 5, 2)->default(0);
+            $table->decimal('skills_percentage', 5, 2)->default(0);
+            $table->decimal('certifications_percentage', 5, 2)->default(0);
+            $table->decimal('match_percentage', 5, 2)->default(0);
+            $table->enum('status', ['Passed', 'Failed'])->default('Failed');
+            $table->unsignedBigInteger('created_by');
             $table->foreign('created_by')->references('id')->on('users');
-            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('updated_by');
             $table->foreign('updated_by')->references('id')->on('users');
             $table->timestamps();
         });

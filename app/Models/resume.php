@@ -10,7 +10,7 @@ class Resume extends Model
 {
     protected $table = 'resumes';
     protected $fillable = [
-        'job_id',
+        'job_posting_id',
         'applicant_name',
         'applicant_email',
         'years_of_experience',
@@ -20,12 +20,18 @@ class Resume extends Model
         'work_history',
         'raw_text',
         'embedding',
+        'education_percentage',
+        'experience_percentage',
+        'skills_percentage',
+        'certifications_percentage',
+        'match_percentage',
+        'status',
         'created_by',
         'updated_by',
     ];
 
     public function job()
     {
-        return $this->belongsTo(job::class, 'job_id');
+        return $this->belongsTo(JobPosting::class, 'job_posting_id');  // Updated
     }
 }

@@ -132,11 +132,9 @@
 
     <script>
         function clearModalFields() {
-            // Clear all form fields
             const form = document.querySelector('form');
             form.reset();
 
-            // Remove any success messages after a delay
             setTimeout(() => {
                 const successMessage = document.querySelector('[data-success]');
                 if (successMessage) {
@@ -151,58 +149,273 @@
         const selectedJob = document.getElementById('selected_job');
         const resultsBody = document.getElementById('resultsBody');
 
+        // Function to load existing resumes for a job
+        function loadJobResumes(jobId) {
+            if (!jobId) {
+                resultsBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-gray-400">
+                        Select a job to view previous results
+                    </td>
+                </tr>
+            `;
+                return;
+            }
 
+            // Show loading state
+            resultsBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p class="mt-2 text-gray-600">Loading previous results...</p>
+                </td>
+            </tr>
+        `;
+
+            // Fetch resumes for this job
+            fetch(`/resume/by-job/${jobId}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(async res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to load job resumes');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    updateResultsTable(data.success || []);
+
+                    // Add count indicator
+                    if (data.count > 0) {
+                        const jobInfo = document.getElementById('jobInfo');
+                        if (jobInfo) {
+                            jobInfo.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
+                            Loaded ${data.count} previous resume(s) for this job
+                        </div>
+                    `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading job resumes:', error);
+                    resultsBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-red-600">
+                        Failed to load previous results. ${error.message}
+                    </td>
+                </tr>
+            `;
+                });
+        }
+
+        // Function to update the results table
+        function updateResultsTable(resumes) {
+            resultsBody.innerHTML = '';
+
+            if (resumes.length === 0) {
+                resultsBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4 text-gray-400">
+                    No results found. Upload resumes to see matching results.
+                </td>
+            </tr>
+        `;
+                return;
+            }
+
+            resumes.forEach(row => {
+                // Safely handle null/undefined values
+                const education = parseFloat(row.education) || 0;
+                const experience = parseFloat(row.experience) || 0;
+                const skills = parseFloat(row.skills) || 0;
+                const certifications = parseFloat(row.certifications) || 0;
+                const match = parseFloat(row.match) || 0;
+                const passingThreshold = parseFloat(row.passing_threshold) || 70;
+
+                const statusClass = row.status === 'Passed' ?
+                    'bg-green-100 text-green-800 border-green-200' :
+                    'bg-red-100 text-red-800 border-red-200';
+
+                const statusIcon = row.status === 'Passed' ? '✓' : '✗';
+
+                resultsBody.innerHTML += `
+            <tr class="hover:bg-gray-50">
+                <td class="border px-3 py-2">
+                    <div class="font-medium">${row.applicant || 'Unknown'}</div>
+                    <div class="text-xs text-gray-500">${row.created_at || ''}</div>
+                </td>
+                <td class="border px-3 py-2">${row.job || 'Unknown Job'}</td>
+                <td class="border px-3 py-2 text-center">${education.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center">${experience.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center">${skills.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center">${certifications.toFixed(2)}%</td>
+                <td class="border px-3 py-2 text-center font-semibold ${match >= passingThreshold ? 'text-green-600' : 'text-red-600'}">
+                    ${match.toFixed(2)}%
+                </td>
+                <td class="border px-3 py-2 text-center">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                        ${statusIcon} ${row.status || 'Unknown'}
+                    </span>
+                </td>
+            </tr>
+        `;
+            });
+
+            // Add summary row
+            const passedCount = resumes.filter(row => row.status === 'Passed').length;
+            const totalCount = resumes.length;
+
+            resultsBody.innerHTML += `
+        <tr class="bg-gray-50 font-medium">
+            <td colspan="6" class="border px-3 py-2 text-right">
+                Summary:
+            </td>
+            <td class="border px-3 py-2 text-center">
+                ${passedCount}/${totalCount} Passed
+            </td>
+            <td class="border px-3 py-2 text-center">
+                <span class="px-2 py-1 rounded ${passedCount === totalCount ? 'bg-green-100 text-green-800' : passedCount > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                    ${Math.round((passedCount / totalCount) * 100)}% Pass Rate
+                </span>
+            </td>
+        </tr>
+    `;
+        }
+
+        // Event listener for job selection
         jobSelect.addEventListener('change', function() {
-            if (this.value) {
+            const jobId = this.value;
+
+            if (jobId) {
                 resumeInput.disabled = false;
                 uploadBtn.disabled = false;
-                selectedJob.value = this.value;
+                selectedJob.value = jobId;
+
+                // Load existing resumes for this job
+                loadJobResumes(jobId);
+
+                // Update job info display
+                const selectedOption = this.options[this.selectedIndex];
+                const jobInfo = document.getElementById('jobInfo');
+                if (!jobInfo) {
+                    // Create job info display if it doesn't exist
+                    const jobSelectionDiv = document.querySelector('.bg-white.p-4.rounded.shadow:first-child');
+                    const infoDiv = document.createElement('div');
+                    infoDiv.id = 'jobInfo';
+                    infoDiv.className = 'mt-2 text-sm';
+                    jobSelectionDiv.appendChild(infoDiv);
+                }
             } else {
                 resumeInput.disabled = true;
                 uploadBtn.disabled = true;
+                resultsBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-gray-400">
+                        Select a job to view previous results
+                    </td>
+                </tr>
+            `;
+
+                // Clear job info
+                const jobInfo = document.getElementById('jobInfo');
+                if (jobInfo) {
+                    jobInfo.innerHTML = '';
+                }
             }
         });
 
+        // Load resumes on page load if a job is already selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialJobId = jobSelect.value;
+            if (initialJobId) {
+                loadJobResumes(initialJobId);
+            }
+        });
 
+        // Update the form submission handler to reload after upload
         document.getElementById('resumeForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const currentJobId = selectedJob.value;
 
             uploadBtn.innerText = 'Processing...';
             uploadBtn.disabled = true;
 
+            // Show loading state
+            resultsBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p class="mt-2 text-gray-600">Processing resumes...</p>
+                </td>
+            </tr>
+        `;
 
             fetch("{{ route('resume.upload.match') }}", {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
                     }
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    if (!res.ok) {
+                        throw new Error('Upload failed with status: ' + res.status);
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    resultsBody.innerHTML = '';
+                    console.log('Response data:', data);
 
+                    // Reload the resumes for this job to show updated list
+                    loadJobResumes(currentJobId);
 
-                    data.forEach(row => {
-                        resultsBody.innerHTML += `
-                            <tr>
-                            <td class="border px-2 py-1">${row.applicant}</td>
-                            <td class="border px-2 py-1">${row.job}</td>
-                            <td class="border px-2 py-1">${row.education}%</td>
-                            <td class="border px-2 py-1">${row.experience}%</td>
-                            <td class="border px-2 py-1">${row.skills}%</td>
-                            <td class="border px-2 py-1">${row.certifications}%</td>
-                            <td class="border px-2 py-1 font-semibold">${row.match}%</td>
-                            </tr>
-                            `;
-                    });
+                    // Show success notification
+                    showNotification('Successfully processed ' + data.summary.processed + ' resume(s)',
+                        'success');
 
+                    // Clear file input
+                    document.getElementById('resumes').value = '';
 
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Upload failed: ' + error.message, 'error');
+                })
+                .finally(() => {
                     uploadBtn.innerText = 'Upload & Match';
                     uploadBtn.disabled = false;
                 });
         });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
+            type === 'success' ? 'bg-green-100 text-green-800 border-green-200' :
+            type === 'error' ? 'bg-red-100 text-red-800 border-red-200' :
+            'bg-blue-100 text-blue-800 border-blue-200'
+        } border`;
+            notification.innerHTML = `
+            <div class="flex items-center gap-3">
+                <span class="font-medium">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+                <span>${message}</span>
+            </div>
+        `;
+
+            document.body.appendChild(notification);
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
     </script>
 @endsection

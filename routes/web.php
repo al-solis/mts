@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('setting', SettingController::class)->except(['destroy']);
 
+    Route::get('resume/by-job/{jobId}', [ResumeController::class, 'getByJob'])->name('resume.by.job');
     Route::post('resume/upload-match', [ResumeController::class, 'upload'])->name('resume.upload.match');
     Route::resource('matching', ResumeController::class)->except(['destroy']);
 
