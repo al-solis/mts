@@ -18,4 +18,9 @@ class company extends Model
         'created_by',
         'updated_by',
     ];
+
+    public function jobs()
+    {
+        return $this->hasMany(JobPosting::class, 'company_id');
+    }
 }

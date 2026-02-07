@@ -52,42 +52,37 @@
         @endif
 
         {{-- Job Selection --}}
-        <div class="bg-white p-2 rounded-xl shadow">
-            <div class="ml-2 mr-2">
-                <label class="block text-lg font-semibold mb-1">Select Job Posting</label>
-                <select id="job_id"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500">
-                    <option value="">-- Select Job --</option>
-                    @foreach ($jobs as $job)
-                        <option value="{{ $job->id }}">{{ $job->title }} ({{ $job->company->name }})</option>
-                    @endforeach
-                </select>
-                {{-- Job info container --}}
-                <div id="jobInfoContainer" class="mt-2"></div>
-            </div>
+        <div class="bg-white p-4 rounded-xl shadow">
+            <label class="block text-sm font-medium mb-1">Select Job Posting</label>
+            <select id="job_id" class="w-full border rounded px-3 py-2">
+                <option value="">-- Select Job --</option>
+                @foreach ($jobs as $job)
+                    <option value="{{ $job->id }}">{{ $job->title }} ({{ $job->company->name }})</option>
+                @endforeach
+            </select>
+            {{-- Job info container --}}
+            <div id="jobInfoContainer" class="mt-2"></div>
         </div>
 
         {{-- Resume Upload --}}
-        <div class="bg-white p-2 rounded-xl shadow">
-            <div class="ml-2 mr-2">
-                <form id="resumeForm" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" name="job_id" id="selected_job">
+        <div class="bg-white p-4 rounded-xl shadow">
+            <form id="resumeForm" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="job_id" id="selected_job">
 
 
-                    <label class="block text-lg font-semibold mb-1">Upload Resumes (PDF / DOC / DOCX)</label>
-                    <input type="file" name="resumes[]" id="resumes" multiple accept=".pdf,.doc,.docx,.txt"
-                        class="w-full border rounded px-3 py-2 inline-flex items-center gap-2 text-xs font-medium text-gray bg-white-100 hover:bg-white-800" />
+                <label class="block text-sm font-medium mb-1">Upload Resumes (PDF / DOCX)</label>
+                <input type="file" name="resumes[]" id="resumes" multiple accept=".pdf,.doc,.docx,.txt"
+                    class="w-full border rounded px-3 py-2 inline-flex items-center gap-2 text-xs font-medium text-gray bg-white-100 hover:bg-white-800" />
 
-                    <button type="submit" id="uploadBtn" disabled
-                        class="mt-3 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800">
-                        Upload & Match
-                    </button>
-                </form>
-            </div>
+                <button type="submit" id="uploadBtn" disabled
+                    class="mt-3 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800">
+                    Upload & Match
+                </button>
+            </form>
         </div>
 
-        {{-- <form action="" method="GET">
+        <form action="" method="GET">
             <div class="flex flex-col md:flex-row gap-2 text-xs md:text-sm">
                 <div class="md:w-2/3 w-full">
                     <input type="text" id="simple-search" name="search" placeholder="Search by name or description..."
@@ -107,21 +102,32 @@
             </div>
             <button type="submit"
                 class="hidden mt-4 w-full shrink-0 rounded-lg bg-gray-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800 sm:mt-0 sm:w-auto">Search</button>
-        </form> --}}
+        </form>
 
         {{-- Table --}}
-        <div class="bg-white p-2 rounded-xl shadow">
-            <div class="ml-2 mr-2">
-                <h2 class="text-lg font-semibold mb-3">Matching Results</h2>
+        <div class="bg-white p-4 rounded-xl shadow">
+            <h2 class="text-lg font-semibold mb-3">Matching Results</h2>
 
-                <div id="resultsBody" class="space-y-4">
-                    <div class="text-center py-6 text-gray-400">
-                        No results yet
-                    </div>
-                </div>
-            </div>
+
+            <table class="w-full border text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border px-2 py-1">Applicant</th>
+                        <th class="border px-2 py-1">Job Title</th>
+                        <th class="border px-2 py-1">Education</th>
+                        <th class="border px-2 py-1">Experience</th>
+                        <th class="border px-2 py-1">Relevance</th>
+                        <th class="border px-2 py-1">General</th>
+                        <th class="border px-2 py-1">Match %</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-gray-400">No results yet</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
     </div>
 
     </div>
@@ -210,158 +216,76 @@
 
         // Function to update the results table
         function updateResultsTable(resumes) {
-            const resultsBody = document.getElementById('resultsBody');
             resultsBody.innerHTML = '';
 
             if (resumes.length === 0) {
                 resultsBody.innerHTML = `
-            <div class="text-center py-6 text-gray-400">
-                No results found. Upload resumes to see matching results.
-            </div>
+            <tr>
+                <td colspan="8" class="text-center py-4 text-gray-400">
+                    No results found. Upload resumes to see matching results.
+                </td>
+            </tr>
         `;
                 return;
             }
 
-            resumes.forEach((row, index) => {
+            resumes.forEach(row => {
+                // Safely handle null/undefined values
+                const education = parseFloat(row.education) || 0;
+                const experience = parseFloat(row.experience) || 0;
+                const relevance = parseFloat(row.relevance) || 0;
+                const general = parseFloat(row.general) || 0;
                 const match = parseFloat(row.match) || 0;
-                const threshold = parseFloat(row.passing_threshold) || 70;
+                const passingThreshold = parseFloat(row.passing_threshold) || 70;
 
-                const matchLabel =
-                    match >= 85 ? 'Excellent Match' :
-                    match >= 70 ? 'Good Match' :
-                    'Low Match';
+                const statusClass = row.status === 'Passed' ?
+                    'bg-green-100 text-green-800 border-green-200' :
+                    'bg-red-100 text-red-800 border-red-200';
 
-                const isPassed = match >= threshold;
-
-                const matchColor = isPassed ? 'text-green-600' :
-                    match >= 70 ?
-                    'text-blue-600' :
-                    'text-red-600';
-
-                const passButton = isPassed ?
-                    `
-                    <button class="inline-flex items-center gap-1 px-3 py-1 text-xs text-green-600 border border-green-200 rounded-lg hover:bg-green-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-square" viewBox="0 0 16 16">
-                            <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5z"/>
-                            <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0"/>
-                        </svg>
-                        Pass
-                    </button>
-                    ` :
-                    '';
-
-                const tagLabel = row.tag == 1 ? 'Scheduled' :
-                    row.tag == 2 ? 'Passed' :
-                    row.tag == 3 ? 'Hold' :
-                    row.tag == 4 ? 'Rejected' :
-                    'Pending';
-
-                const tagColor = row.tag == 1 ? 'bg-blue-300 text-blue-800 border-blue-400' :
-                    row.tag == 2 ? 'bg-green-300 text-green-800 border-green-400' :
-                    row.tag == 3 ? 'bg-yellow-300 text-yellow-800 border-yellow-400' :
-                    row.tag == 4 ? 'bg-red-300 text-red-800 border-red-400' :
-                    'bg-gray-300 text-gray-800 border-gray-400';
+                const statusIcon = row.status === 'Passed' ? '✓' : '✗';
 
                 resultsBody.innerHTML += `
-                <div class="border rounded-xl p-4 shadow-sm bg-white">
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-start gap-3">
-                            <div class="p-2 bg-gray-100 rounded-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="currentColor" class="bi bi-file-earmark-text" viewBox="0 0 16 16">
-                                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
-                                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
-                                </svg>
-                            </div>
-                            <div>                                
-                                <div class="sm-col-span-1 font-semibold text-gray-900">
-                                    ${row.applicant || 'Unknown Applicant'}
-                                </div>                                 
-                                <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-1">
-                                    <div class="text-sm ${matchColor} mr-2">
-                                        ${match.toFixed(0)}% Match - ${matchLabel}
-                                    </div>
-                                    <div class="flex justify-start">
-                                        <div class="inline-flex items-center justify-center 
-                                                    ${tagColor} text-xs font-semibold 
-                                                    rounded-full text-white px-2 py-0.5 w-fit">
-                                            ${tagLabel}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    ${row.created_at || ''}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button onclick="toggleDetails(${index})"
-                                class="inline-flex items-center gap-1 px-3 py-1 text-xs border rounded-lg hover:bg-gray-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-                                </svg> 
-                                Details
-                            </button>
-
-                            <button class="inline-flex items-center gap-1 px-3 py-1 text-xs border rounded-lg hover:bg-gray-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar2-check" viewBox="0 0 16 16">
-                            <path d="M10.854 8.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
-                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
-                            <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z"/>
-                            </svg>
-                            Schedule
-                            </button>
-                            
-                            ${passButton}
-
-                            <button class="inline-flex items-center gap-1 px-3 py-1 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                </svg>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="mt-3">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full bg-gray-900"
-                                style="width: ${match}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- DETAILS (hidden by default) -->
-                    <div id="details-${index}" class="hidden mt-4 border-t pt-3 text-sm text-gray-700">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div>
-                                <div class="text-xs text-gray-500">Education Match</div>
-                                <div class="font-medium">${row.education || 0}%</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500">Experience</div>
-                                <div class="font-medium">${row.experience || 0}%</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500">Relevance</div>
-                                <div class="font-medium">${row.relevance || 0}%</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500">General</div>
-                                <div class="font-medium">${row.general || 0}%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <tr class="hover:bg-gray-50">
+                        <td class="border px-3 py-2">
+                            <div class="font-medium">${row.applicant || 'Unknown'}</div>
+                            <div class="text-xs text-gray-500">${row.created_at || ''}</div>
+                        </td>
+                        <td class="border px-3 py-2">${row.job || 'Unknown Job'}</td>
+                        <td class="border px-3 py-2 text-center">${education.toFixed(2)}%</td>
+                        <td class="border px-3 py-2 text-center">${experience.toFixed(2)}%</td>
+                        <td class="border px-3 py-2 text-center">${relevance.toFixed(2)}%</td>
+                        <td class="border px-3 py-2 text-center">${general.toFixed(2)}%</td>
+                        <td class="border px-3 py-2 text-center font-semibold ${match >= passingThreshold ? 'text-green-600' : 'text-red-600'}">
+                            ${match.toFixed(2)}%
+                        </td>
+                        <td class="border px-3 py-2 text-center">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                ${statusIcon} ${row.status || 'Unknown'}
+                            </span>
+                        </td>
+                    </tr>
                 `;
             });
-        }
 
-        function toggleDetails(index) {
-            const el = document.getElementById(`details-${index}`);
-            el.classList.toggle('hidden');
+            // Add summary row
+            const passedCount = resumes.filter(row => row.status === 'Passed').length;
+            const totalCount = resumes.length;
+
+            resultsBody.innerHTML += `
+            <tr class="bg-gray-50 font-medium">
+                <td colspan="6" class="border px-3 py-2 text-right">
+                    Summary:
+                </td>
+                <td class="border px-3 py-2 text-center">
+                    ${passedCount}/${totalCount} Passed
+                </td>
+                <td class="border px-3 py-2 text-center">
+                    <span class="px-2 py-1 rounded ${passedCount === totalCount ? 'bg-green-100 text-green-800' : passedCount > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                        ${Math.round((passedCount / totalCount) * 100)}% Pass Rate
+                    </span>
+                </td>
+            </tr>
+        `;
         }
 
         // Event listener for job selection

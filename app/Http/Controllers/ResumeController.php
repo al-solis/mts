@@ -47,6 +47,7 @@ class ResumeController extends Controller
                     'relevance' => $resume->relevance_percentage ?? 0,
                     'status' => $resume->status,
                     'passing_threshold' => $passingThreshold,
+                    'tag' => $resume->tag,
                     'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
                 ];
             });
@@ -176,6 +177,7 @@ class ResumeController extends Controller
                     'general_percentage' => $matchResult['general_percentage'] ?? 0,
                     'match_percentage' => $matchResult['total_percentage'],
                     'status' => $status,
+                    'tag' => 0, // pending
                     'created_by' => Auth::id(),
                     'updated_by' => Auth::id(),
                 ]);

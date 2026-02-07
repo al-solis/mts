@@ -31,6 +31,7 @@ class Resume extends Model
         'general_percentage',
         'match_percentage',
         'status',
+        'tag',
         'created_by',
         'updated_by',
     ];

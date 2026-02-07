@@ -32,6 +32,18 @@ class CompanyController extends Controller
             $query->where('status', $status);
         }
 
+        $query = $query->withCount('jobs')
+            ->withCount([
+                'jobs as active_jobs_count' => function ($q) {
+                    $q->where('status', '1');
+                }
+            ])
+            ->withCount([
+                'jobs as successful_placements_count' => function ($q) {
+                    $q->where('status', '3'); // Assuming status '3' means successful placement
+                }
+            ]);
+
         $companies = $query->paginate(config('app.pagination'))
             ->appends(['search' => $search, 'status' => $status]);
 

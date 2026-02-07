@@ -35,6 +35,7 @@ return new class extends Migration {
             $table->decimal('general_percentage', 5, 2)->default(0);
             $table->decimal('match_percentage', 5, 2)->default(0);
             $table->enum('status', ['Passed', 'Failed'])->default('Failed');
+            $table->integer('tag')->default(0); // 0 = pending, 1 = scheduled, 2 = passed, 3 = hold, 4 = rejected
             $table->unsignedBigInteger('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->unsignedBigInteger('updated_by');
