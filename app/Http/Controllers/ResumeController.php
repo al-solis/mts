@@ -38,6 +38,7 @@ class ResumeController extends Controller
                 $passingThreshold = $this->getPassingThreshold($job, $settings);
 
                 return [
+                    'id' => $resume->id,
                     'applicant' => $resume->applicant_name,
                     'job' => $job->title,
                     'education' => $resume->education_percentage,

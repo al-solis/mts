@@ -2,6 +2,7 @@
 @section('content')
     @php
         use Illuminate\Support\Str;
+        use Carbon\Carbon;
     @endphp
 
     <div class="p-6 space-y-6">
@@ -39,41 +40,44 @@
                 [
                     'title' => 'Total Appointments',
                     'value' => $totalAppointments,
-                    'color' => 'blue',
+                    'color' => 'gray',
                     'icon' => '
-                        <svg xmlns="http://www.w3.org/2000/svg" class = "w-5 h-5 text-blue-600" width="16" height="16" fill="currentColor" class="bi bi-suitcase-lg" viewBox="0 0 16 16">
-                        <path d="M5 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2h3.5A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5H14a.5.5 0 0 1-1 0H3a.5.5 0 0 1-1 0h-.5A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2zm1 0h4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1M1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5H3V3zM15 12.5v-9a.5.5 0 0 0-.5-.5H13v10h1.5a.5.5 0 0 0 .5-.5m-3 .5V3H4v10z"/>
-</svg>',
+                        <svg xmlns="http://www.w3.org/2000/svg" class = "w-5 h-5 text-gray-600" width="16" height="16" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
+                        <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                        </svg>',
                 ],
                 [
                     'title' => 'Upcoming',
                     'value' => $upcomingAppointments,
-                    'color' => 'green',
+                    'color' => 'blue',
                     'icon' => '
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M5 13l4 4L19 7" />
+                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" width="16" height="16"
+                        class="bi bi-calendar2" viewBox="0 0 16 16">                            
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+                        <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z"/>
                         </svg>',
                 ],
                 [
                     'title' => 'Completed',
                     'value' => $completedAppointments,
-                    'color' => 'yellow',
+                    'color' => 'green',
                     'icon' => '
-                        <svg class="w-5 h-5 text-yellow-600" fill="currentColor" width="16" height="16"
-                        class="bi bi-pause" viewBox="0 0 16 16">
-                            <path d="M6 3.5a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5m4 0a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5"/>
-                        </svg>',
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" width="16" height="16"
+                        class="bi bi-calendar-check" viewBox="0 0 16 16">
+                            <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                            </svg>',
                 ],
                 [
                     'title' => 'Cancelled',
                     'value' => $cancelledAppointments,
                     'color' => 'red',
                     'icon' => '
-                        <svg class="w-5 h-5 text-red-600" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                        </svg>',
+                        <svg class="w-5 h-5 text-red-600" width="16" height="16" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
+                            <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708"/>
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                            </svg>',
                 ],
             ];
         @endphp
@@ -145,11 +149,9 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
                         onchange="this.form.submit()">
                         <option value="">All Status</option>
-                        <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
-                        <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Paused</option>
-                        <option value="3" {{ request('status') === '3' ? 'selected' : '' }}>Closed</option>
-                        <option value="4" {{ request('status') === '4' ? 'selected' : '' }}>Cancelled</option>
+                        <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Completed</option>
+                        <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Scheduled</option>
+                        <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Cancelled</option>
                     </select>
                 </div>
             </div>
@@ -157,214 +159,142 @@
                 class="hidden mt-4 w-full shrink-0 rounded-lg bg-gray-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800 sm:mt-0 sm:w-auto">Search</button>
         </form>
 
-        {{-- Table --}}
-        <div class="bg-white border rounded-xl overflow-x-auto md:overflow-visible scroll-smooth">
-            <table class="min-w-full text-xs">
-                <thead class="bg-gray-200 text-gray-600">
-                    <tr>
-                        <th scope="col" class="px-4 py-3 text-left w-[200px]">Title</th>
-                        <th scope="col" class="px-4 py-3 text-left w-[150px]">Company</th>
-                        <th scope="col" class="px-4 py-3 text-left w-[250px]">Job Description</th>
-                        <th scope="col" class="px-4 py-3 text-left w-[250px]">Qualification</th>
-                        <th scope="col" class="px-4 py-3 text-left w-[150px]">Salary Range</th>
-                        <th scope="col" class="px-4 py-3 text-left w-[100px]">Status</th>
-                        <th scope="col" class="px-4 py-3 text-center w-[50px]">Actions</th>
-                    </tr>
-                </thead>
+        <div class="bg-white rounded-xl border p-4">
+            <h2 class="text-lg font-semibold mb-4">Upcoming Appointments</h2>
 
-                <tbody class="divide-y">
-                    @forelse($jobs as $job)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 w-[200px]">{{ $job->title }}</td>
-                            <td class="px-4 py-3 w-[150px]">{{ $job->company->name }}</td>
-                            <td class="px-4 py-3 w-[250px]">{{ Str::limit($job->description, 150) }}</td>
-                            <td class="px-4 py-3 w-[250px]">{{ Str::limit($job->qualification, limit: 150) }}</td>
-                            <td class="px-4 py-3 w-[150px]">{{ $job->salary_range }}</td>
-                            <td class="px-4 py-3 w-[100px] text-xs">
-                                @php
-                                    $statuses = [
-                                        0 => ['color' => 'bg-red-100 text-red-600', 'label' => 'Inactive'],
-                                        1 => ['color' => 'bg-green-100 text-green-700', 'label' => 'Active'],
-                                        2 => ['color' => 'bg-yellow-100 text-yellow-600', 'label' => 'Paused'],
-                                        3 => ['color' => 'bg-gray-100 text-gray-600', 'label' => 'Closed'],
-                                        4 => ['color' => 'bg-red-100 text-red-600', 'label' => 'Cancelled'],
-                                    ];
-                                    $status = $statuses[$job->status] ?? [
-                                        'color' => 'bg-gray-100 text-gray-600',
-                                        'label' => 'Unknown',
-                                    ];
-                                @endphp
+            @forelse ($upcoming as $appt)
+                <div class="flex items-center justify-between border rounded-xl p-4 mb-3">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z" />
+                            </svg>
+                        </div>
 
-                                <span class="px-2 py-1 text-xs rounded-full {{ $status['color'] }}">
-                                    {{ $status['label'] }}
+                        <div>
+                            <p class="font-semibold text-gray-900">
+                                {{ $appt->resume->applicant_name }}
+                                <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                                    {{ $appt->meeting_type == 2 ? 'Online' : 'In-person' }}
                                 </span>
-                            </td>
-                            <td class="px-4 py-3 w-[50px]">
-                                <div class="flex items-center justify-center space-x-2">
-                                    <button type="button" title="Edit job {{ $job->title }}"
-                                        data-modal-target="edit-modal" data-modal-toggle="edit-modal"
-                                        data-id="{{ $job->id }}" data-title="{{ $job->title }}"
-                                        data-company_id="{{ $job->company_id }}"
-                                        data-description="{{ $job->description }}"
-                                        data-qualification="{{ $job->qualification }}" data-skill="{{ $job->skill }}"
-                                        data-salary="{{ $job->salary_range }}" data-status="{{ $job->status }}"
-                                        onclick="openEditModal(this)"
-                                        class="group flex space-x-1 text-gray-500 hover:text-blue-600 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                            <path
-                                                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
-                                            <path fill-rule="evenodd"
-                                                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
-                                        </svg>
-                                        {{-- <span class="hidden group-hover:inline transition-opacity duration-200"></span> --}}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="px-4 py-6 text-center text-gray-500">
-                                No jobs found.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <!-- Pagination Links -->
-        <div
-            class="w-full md:w-auto text-xs flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0 mb-2">
-            {{ $jobs->links() }}
-        </div>
-    </div>
+                                <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100">
+                                    {{ $appt->interview_round }}
+                                </span>
+                            </p>
 
-    <!-- Create company modal -->
-    <div id="add-modal" tabindex="-1" aria-hidden="true"
-        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full">
-        <div class="relative p-4 w-full max-w-xl h-full md:h-auto">
-            <!-- Modal content -->
-            <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-                <!-- Modal header -->
-                <div class="flex justify-between items-center pb-4 mb-2 rounded-t border-b sm:mb-5 dark:border-gray-600">
-                    <h3 class="text-md font-semibold text-gray-900 dark:text-white">
-                        Post New Job
-                    </h3>
-                    <button type="button"
-                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                        data-modal-toggle="add-modal">
-                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
+                            <p class="text-sm text-gray-500">
+                                {{ $appt->resume->job->title ?? '—' }}
+                            </p>
+
+                            <div class="flex gap-4 text-xs text-gray-500 mt-1">
+                                <span><i class="bi bi-calendar"></i> {{ $appt->interview_date->format('m/d/Y') }}</span>
+                                <span><i class="bi bi-clock"></i>
+                                    {{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
+                            </div>
+
+                            <p class="italic text-sm text-gray-500 mt-1">
+                                {{ $appt->notes }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="button" data-modal-target="edit-modal" data-modal-toggle="edit-modal"
+                            data-id = "{{ $appt->id }}" data-resume-id = "{{ $appt->resume_id }}"
+                            data-interview-date = "{{ $appt->interview_date->format('Y-m-d') }}"
+                            data-interview-time = "{{ Carbon::parse($appt->interview_time)->format('H:i') }}"
+                            data-interview-round = "{{ $appt->interview_round }}"
+                            data-meeting-link = "{{ $appt->meeting_link }}" data-notes = "{{ $appt->notes }}"
+                            data-status = "{{ $appt->status }}"
+                            class="px-3 py-1 text-xs border rounded-lg hover:bg-gray-100">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </button>
+
+                        <form action="" method="POST">
+                            @csrf
+                            <button
+                                class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                <i class="bi bi-check-circle"></i><span class="ml-1">Complete</span>
+                            </button>
+                        </form>
+
+                        <form action="" method="POST">
+                            @csrf
+                            <button class="px-3 py-1 text-xs text-red-600 border border-red-300 rounded-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <!-- Modal body -->
-                <div class="overflow-y-auto max-h-[70vh]">
-                    <form action="{{ route('job.store') }}" method="POST">
-                        @csrf
-                        <div class="grid ml-1 mr-1 gap-2 mb-4 sm:grid-cols-2">
-                            <div class="sm:col-span-2">
-                                <label for="title" class="block text-xs font-medium text-gray-900 dark:text-white">Job
-                                    Title*</label>
-                                <input type="text" name="title" id="title"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Senior Software Engineer" required>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label for="company_id"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Company*</label>
-                                <select id="company_id" name="company_id"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    required>
-                                    <option selected="">Select a company</option>
-                                    @foreach ($companies as $company)
-                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
-                                    @endforeach
-                                </select>
+            @empty
+                <p class="text-center text-gray-400 py-6">No upcoming appointments</p>
+            @endforelse
+        </div>
+
+        @if ($completedAppointments !== 0)
+            <div class="bg-white rounded-xl border p-4 mt-6">
+                <h2 class="text-lg font-semibold mb-4">Completed Appointments</h2>
+
+                @forelse ($completed as $appt)
+                    <div class="flex items-center justify-between border rounded-xl p-4 mb-3">
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647z" />
+                                </svg>
                             </div>
 
-                            <div class="md:col-span-2">
-                                <label for="description"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Job
-                                    Description*</label>
-                                <textarea name="description" id="description" rows="3"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Provide a detailed description of a job" required></textarea>
-                            </div>
+                            <div>
+                                <p class="font-semibold">
+                                    {{ $appt->resume->file_name }}
+                                    <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
+                                        Completed
+                                    </span>
+                                </p>
 
-                            <div class="md:col-span-2">
-                                <label for="qualification"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Qualification*</label>
-                                <textarea name="qualification" id="qualification" rows="3"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Provide the required qualifications and skills" required></textarea>
-                            </div>
+                                <p class="text-xs text-gray-500">
+                                    {{ $appt->interview_round }}
+                                </p>
 
-                            <div class="md:col-span-2">
-                                <label for="skill"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Preferred
-                                    Skills*</label>
-                                <textarea name="skill" id="skill" rows="3"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. List any preferred skills and experience" required></textarea>
-                            </div>
-
-                            <div class="md:col-span-1">
-                                <label for="salary"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Salary Range*</label>
-                                <input type="text" name="salary" id="salary"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. 50,000 - 70,000" required>
-                            </div>
-
-                            <div class="md:col-span-1">
-                                <label for="status"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Status*</label>
-                                <select id="status" name="status"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    required>
-                                    <option value = "" selected>Select status</option>
-                                    <option value="1">Active</option>
-                                    <option value="0">Inactive</option>
-                                    <option value="2">Paused</option>
-                                    <option value="3">Closed</option>
-                                    <option value="4">Cancelled</option>
-                                </select>
+                                <div class="flex gap-4 text-xs text-gray-500 mt-1">
+                                    <span>📅 {{ $appt->interview_date->format('m/d/Y') }}</span>
+                                    <span>⏰ {{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <button type="submit"
-                            class="text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
-                            <svg class="mr-1 -ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            Post Job
-                        </button>
-                    </form>
-                </div>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1 text-xs bg-gray-900 text-white rounded-lg">
+                                📅 Schedule Next Round
+                            </button>
+
+                            <button class="px-3 py-1 text-xs bg-gray-900 text-white rounded-lg">
+                                👍 Recommend
+                            </button>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-center text-gray-400 py-6">No completed appointments</p>
+                @endforelse
             </div>
-        </div>
+        @endif
     </div>
-    <!-- End create company modal -->
+
+
 
     <!-- Modal  Edit-->
     <div id="edit-modal" tabindex="-1" aria-hidden="true"
         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-        <div class="relative p-4 w-full max-w-xl max-h-full">
+        <div class="relative p-2 w-full max-w-md max-h-full">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
                 <!-- Modal header -->
                 <div
                     class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        Update Job Posting
+                        Update Appointment
                     </h3>
                     <button type="button"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -383,62 +313,42 @@
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="edit_id" id="edit_id">
-
-                        <div class="grid ml-1 mr-1 gap-2 mb-4 sm:grid-cols-2">
+                        <div class="grid ml-1 mr-1 gap-2 mb-2 sm:grid-cols-2">
                             <div class="sm:col-span-2">
-                                <label for="edit_title"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Job
-                                    Title*</label>
-                                <input type="text" name="edit_title" id="edit_title"
+                                <label for="edit_position"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Position*</label>
+                                <input type="text" name="edit_position" id="edit_position"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Senior Software Engineer" required>
+                                    placeholder="e.g. SANAI Digital Solutions Inc." required>
                             </div>
                             <div class="sm:col-span-2">
-                                <input type="hidden" name="original_company_id" id="original_company_id">
-                                <label for="edit_company_id"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Company*</label>
-                                <select id="edit_company_id" name="edit_company_id"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    required>
-                                    <option selected="">Select a company</option>
-                                    @foreach ($companies as $company)
-                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label for="edit_industry"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Industry*</label>
+                                <input type="text" name="edit_industry" id="edit_industry"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="e.g. Information Technology" required>
                             </div>
 
                             <div class="md:col-span-2">
-                                <label for="edit_description"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Job
-                                    Description*</label>
-                                <textarea name="edit_description" id="edit_description" rows="3"
+                                <label for="edit_contact_person"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Contact Person*</label>
+                                <input type="text" name="edit_contact_person" id="edit_contact_person"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Provide a detailed description of a job" required></textarea>
+                                    placeholder="e.g. Juan Dela Cruz" required>
                             </div>
-
                             <div class="md:col-span-2">
-                                <label for="edit_qualification"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Qualification*</label>
-                                <textarea name="edit_qualification" id="edit_qualification" rows="3"
+                                <label for="edit_email"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Email Address*</label>
+                                <input type="email" name="edit_email" id="edit_email"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Provide the required qualifications and skills" required></textarea>
+                                    placeholder="e.g. juan.delacruz@yahoo.com" required>
                             </div>
-
-                            <div class="md:col-span-2">
-                                <label for="edit_skill"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Preferred
-                                    Skills*</label>
-                                <textarea name="edit_skill" id="edit_skill" rows="3"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. List any preferred skills and experience" required></textarea>
-                            </div>
-
                             <div class="md:col-span-1">
-                                <label for="edit_salary"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Salary Range*</label>
-                                <input type="text" name="edit_salary" id="edit_salary"
+                                <label for="edit_location"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Location*</label>
+                                <input type="text" name="edit_location" id="edit_location"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. 50,000 - 70,000" required>
+                                    placeholder="e.g. Imus, Cavite" required>
                             </div>
 
                             <div class="md:col-span-1">
@@ -447,12 +357,9 @@
                                 <select id="edit_status" name="edit_status"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
                                     required>
-                                    <option value = "" selected>Select status</option>
+                                    {{-- <option selected="">Select product type</option> --}}
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
-                                    <option value="2">Paused</option>
-                                    <option value="3">Closed</option>
-                                    <option value="4">Cancelled</option>
                                 </select>
                             </div>
                         </div>
@@ -460,7 +367,7 @@
                         <button type="submit"
                             class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
                             {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
-                            Update Job Posting
+                            Update Company
                         </button>
                     </form>
                 </div>
@@ -468,6 +375,7 @@
         </div>
     </div>
     <!-- End edit modal -->
+
 
     <script>
         function clearModalFields() {
@@ -483,36 +391,5 @@
                 }
             }, 3000);
         }
-
-        function openEditModal(button) {
-            const id = button.getAttribute('data-id');
-            document.getElementById('edit_id').value = button.getAttribute('data-id');
-            document.getElementById('edit_title').value = button.getAttribute('data-title');
-            document.getElementById('edit_company_id').value = button.getAttribute('data-company_id');
-            document.getElementById('edit_description').value = button.getAttribute('data-description');
-            document.getElementById('edit_qualification').value = button.getAttribute('data-qualification');
-            document.getElementById('edit_skill').value = button.getAttribute('data-skill');
-            document.getElementById('edit_salary').value = button.getAttribute('data-salary');
-            document.getElementById('edit_status').value = button.getAttribute('data-status');
-            document.getElementById('original_company_id').value = button.getAttribute('data-company_id');
-
-            const companyDropdown = document.getElementById('edit_company_id');
-            companyDropdown.disabled = true;
-
-            const form = document.getElementById('editForm');
-            form.action = `job/${id}`;
-        }
-
-        // document.getElementById('edit-company_id').addEventListener('change', function() {
-        //     const selectedCompanyId = this.value;
-        //     const originalCompanyId = document.getElementById('original_company_id').value;
-
-        //     if (selectedCompanyId !== originalCompanyId) {
-        //         const confirmChange = confirm('Changing the company will update the job posting to the selected company. Do you want to proceed?');
-        //         if (!confirmChange) {
-        //             this.value = originalCompanyId; // Revert to original if not confirmed
-        //         }
-        //     }
-        // });
     </script>
 @endsection

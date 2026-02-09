@@ -6,6 +6,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\AppointmentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,6 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::post('resume/upload-match', [ResumeController::class, 'upload'])->name('resume.upload.match');
     Route::resource('matching', ResumeController::class)->except(['destroy']);
 
+    Route::resource('appointment', AppointmentController::class)->except(['destroy']);
+
+    Route::post('/matching/schedule/{id}', [AppointmentController::class, 'scheduleAppointment'])->name('matching.schedule');
 });
 
 require __DIR__ . '/auth.php';
