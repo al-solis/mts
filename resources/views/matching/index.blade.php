@@ -275,7 +275,9 @@
                             </button>` :
                     row.tag == 1 ?
                     `<button type="button" 
-                            onclick="markAsPassed(${index}, ${row.id})"
+                            data-id="${row.id}"
+                            data-applicant-name="${row.applicant}"
+                            onclick="markAsPassed(this)"
                             class="inline-flex items-center gap-1 px-3 py-1 text-xs text-green-600 border border-green-200 rounded-lg hover:bg-green-50">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-square" viewBox="0 0 16 16">
                                 <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5z"/>
@@ -584,6 +586,38 @@
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('Error scheduling interview for ' + name, 'error');
+                });
+        }
+
+        function markAsPassed(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-applicant-name') || 'this candidate';
+            const confirmPass = confirm('Mark ' + name + ' as passed?');
+            if (!confirmPass) {
+                return;
+            }
+
+            fetch(`/matching/pass/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Candidate marked as passed successfully', 'success');
+                        // Reload the resumes for this job to show updated status
+                        const currentJobId = selectedJob.value;
+                        loadJobResumes(currentJobId);
+                    } else {
+                        showNotification('Failed to mark candidate as passed', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error marking candidate as passed', 'error');
                 });
         }
     </script>

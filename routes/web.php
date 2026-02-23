@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('appointment', AppointmentController::class)->except(['destroy']);
 
     Route::post('/matching/schedule/{id}', [AppointmentController::class, 'scheduleAppointment'])->name('matching.schedule');
+    Route::post('/matching/pass/{id}', [ResumeController::class, 'markAsPassed'])->name('matching.pass');
 
     Route::get('/api/companies/{companyId}/jobs', [JobController::class, 'getJobsByCompany']);
     Route::get('/api/jobs/{jobId}/applicants', [ResumeController::class, 'getApplicantsByJob']);

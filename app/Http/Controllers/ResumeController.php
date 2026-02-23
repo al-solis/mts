@@ -518,4 +518,12 @@ class ResumeController extends Controller
 
         return response()->json($applicants);
     }
+
+    public function markAsPassed($id)
+    {
+        $resume = Resume::findOrFail($id);
+        $resume->update(['tag' => 2]); // 2 = Passed
+
+        return response()->json(['success' => true, 'message' => 'Resume marked as passed']);
+    }
 }
