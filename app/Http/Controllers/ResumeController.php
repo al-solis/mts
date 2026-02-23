@@ -7,12 +7,13 @@ use App\Services\AI\ResumeExtractionService;
 use App\Services\AI\EmbeddingService;
 use App\Services\AI\ResumeTextExtractor;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use App\Models\Resume;
 use App\Models\JobPosting;
 use App\Models\setting;
-use Illuminate\Support\Facades\Log;
+use App\Models\appointment;
 
 
 class ResumeController extends Controller
@@ -501,5 +502,20 @@ class ResumeController extends Controller
         // }
 
         return $settings->minimum_match_percentage ?? 70;
+    }
+
+    public function getApplicantsByJob($jobId)
+    {
+        $applicants = Resume::where('job_posting_id', $jobId)
+            ->where(function ($query) {
+                $query->whereDoesntHave('appointments')
+                    ->orWhereHas('appointments', function ($q) {
+                        $q->where('status', '!=', 0);
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($applicants);
     }
 }

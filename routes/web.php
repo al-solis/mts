@@ -35,6 +35,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('appointment', AppointmentController::class)->except(['destroy']);
 
     Route::post('/matching/schedule/{id}', [AppointmentController::class, 'scheduleAppointment'])->name('matching.schedule');
+
+    Route::get('/api/companies/{companyId}/jobs', [JobController::class, 'getJobsByCompany']);
+    Route::get('/api/jobs/{jobId}/applicants', [ResumeController::class, 'getApplicantsByJob']);
+    Route::post('/appointment/{id}/complete', [AppointmentController::class, 'markAsComplete'])->name('appointment.complete');
 });
 
 require __DIR__ . '/auth.php';

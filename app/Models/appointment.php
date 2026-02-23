@@ -9,8 +9,6 @@ class appointment extends Model
     protected $table = 'appointments';
 
     protected $fillable = [
-        // 'company_id',
-        // 'job_id',
         'resume_id',
         'meeting_type',
         'interview_round',

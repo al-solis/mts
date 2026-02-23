@@ -40,4 +40,9 @@ class Resume extends Model
     {
         return $this->belongsTo(JobPosting::class, 'job_posting_id');  // Updated
     }
+
+    public function appointments()
+    {
+        return $this->hasMany(appointment::class, 'resume_id');
+    }
 }

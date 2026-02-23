@@ -12,14 +12,10 @@ return new class extends Migration {
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            // $table->unsignedBigInteger('company_id');
-            // $table->foreign('company_id')->references('id')->on('companies');
-            // $table->unsignedBigInteger('job_id');
-            // $table->foreign('job_id')->references('id')->on('jobs');
             $table->unsignedBigInteger('resume_id');
             $table->foreign('resume_id')->references('id')->on('resumes');
             $table->integer('meeting_type'); // 1 for in-person, 2 for virtual
-            $table->string('interview_round'); // e.g., "First Round", "Second Round"
+            $table->integer('interview_round'); // e.g., 1:"First Round", 2:"Second Round", 3: Third Round", 4: Final Round, 5: Other
             $table->date('interview_date');
             $table->dateTime('interview_time');
             $table->text('meeting_link')->nullable(); // For virtual meetings

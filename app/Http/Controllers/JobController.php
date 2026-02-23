@@ -122,4 +122,14 @@ class JobController extends Controller
             ->count();
         return response()->json(['jobCount' => $jobCount]);
     }
+
+    public function getJobsByCompany($companyId)
+    {
+        $jobs = JobPosting::where('company_id', $companyId)
+            ->whereIn('status', ['1', '2'])
+            ->select('id', 'title')
+            ->get();
+
+        return response()->json($jobs);
+    }
 }

@@ -179,8 +179,27 @@
                                     {{ $appt->meeting_type == 2 ? 'Online' : 'In-person' }}
                                 </span>
                                 <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100">
-                                    {{ $appt->interview_round }}
+                                    @php
+                                        $roundLable = [
+                                            1 => 'First Round',
+                                            2 => '2nd Round',
+                                            3 => 'Third Round',
+                                            4 => 'Final Round',
+                                            5 => 'Other',
+                                        ];
+                                    @endphp
+                                    {{ $roundLable[$appt->interview_round] ?? 'Other' }}
                                 </span>
+
+                                @if ($appt->status == 0 && $appt->interview_date->isToday())
+                                    <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                                        Today
+                                    </span>
+                                @elseif ($appt->status == 0 && $appt->interview_date->isPast())
+                                    <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">
+                                        Overdue
+                                    </span>
+                                @endif
                             </p>
 
                             <p class="text-sm text-gray-500">
@@ -202,29 +221,31 @@
                     <div class="flex gap-2">
                         <button type="button" data-modal-target="edit-modal" data-modal-toggle="edit-modal"
                             data-id = "{{ $appt->id }}" data-resume-id = "{{ $appt->resume_id }}"
+                            data-company-name = "{{ $appt->resume->job->company->name ?? '' }}"
+                            data-job-title = "{{ $appt->resume->job->title ?? '' }}"
+                            data-applicant-name = "{{ $appt->resume->applicant_name }}"
                             data-interview-date = "{{ $appt->interview_date->format('Y-m-d') }}"
                             data-interview-time = "{{ Carbon::parse($appt->interview_time)->format('H:i') }}"
                             data-interview-round = "{{ $appt->interview_round }}"
+                            data-meeting-type = "{{ $appt->meeting_type }}"
                             data-meeting-link = "{{ $appt->meeting_link }}" data-notes = "{{ $appt->notes }}"
-                            data-status = "{{ $appt->status }}"
+                            data-status = "{{ $appt->status }}" onclick="editAppointment(this)"
                             class="px-3 py-1 text-xs border rounded-lg hover:bg-gray-100">
                             <i class="bi bi-pencil-square"></i> Edit
                         </button>
 
-                        <form action="" method="POST">
-                            @csrf
-                            <button
-                                class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
-                                <i class="bi bi-check-circle"></i><span class="ml-1">Complete</span>
-                            </button>
-                        </form>
+                        <button type="button" onclick="markAsComplete(this)" data-id = "{{ $appt->id }}"
+                            data-applicant-name = "{{ $appt->resume->applicant_name }}"
+                            class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                            <i class="bi bi-check-circle"></i><span class="ml-1">Complete</span>
+                        </button>
 
-                        <form action="" method="POST">
-                            @csrf
-                            <button class="px-3 py-1 text-xs text-red-600 border border-red-300 rounded-lg">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </button>
-                        </form>
+                        <button type="button" data-id = "{{ $appt->id }}"
+                            data-applicant-name="{{ $appt->resume->applicant_name }}" onclick="markAsCancelled(this)"
+                            class="px-3 py-1 text-xs text-red-600 border border-red-300 rounded-lg">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+
                     </div>
                 </div>
             @empty
@@ -282,7 +303,147 @@
         @endif
     </div>
 
+    <!-- Create schedule modal -->
+    <div id="add-modal" tabindex="-1" aria-hidden="true"
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full">
+        <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+            <!-- Modal content -->
+            <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                <!-- Modal header -->
+                <div class="flex justify-between items-center pb-4 mb-2 rounded-t border-b sm:mb-5 dark:border-gray-600">
+                    <h3 class="text-md font-semibold text-gray-900 dark:text-white">
+                        Add New License
+                    </h3>
+                    <button type="button"
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        data-modal-toggle="add-modal">
+                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="overflow-y-auto max-h-[70vh]">
+                    <form action="{{ route('appointment.store') }}" method="POST">
+                        @csrf
+                        <div class="grid ml-1 mr-1 gap-2 mb-4 sm:grid-cols-2">
+                            <div class="w-full md:col-span-2">
+                                <label for="company_id"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Company Name*</label>
+                                <select name="company_id" id="company_id"
+                                    class="select2 bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select company</option>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
+                            <div class="w-full md:col-span-2">
+                                <label for="job_id" class="block text-xs font-medium text-gray-900 dark:text-white">Job
+                                    Title*</label>
+                                <select name="job_id" id="job_id"
+                                    class="select2 bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select Job</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full md:col-span-2">
+                                <label for="applicant_id"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Applicant Name*</label>
+                                <select name="applicant_id" id="applicant_id"
+                                    class="select2 bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select applicant</option>
+                                </select>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="meeting_type"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Meeting Type*</label>
+                                <select id="meeting_type" name="meeting_type"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select type</option>
+                                    <option value="1">In-person</option>
+                                    <option value="2">Online</option>
+                                </select>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="interview_round"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Round*</label>
+                                <select id="interview_round" name="interview_round"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select round</option>
+                                    <option value="1">First Round</option>
+                                    <option value="2">Second Round</option>
+                                    <option value="3">Third Round</option>
+                                    <option value="4">Final Round</option>
+                                    <option value="5">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="interview_date"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Date*</label>
+                                <input type="date" name="interview_date" id="interview_date"
+                                    min="{{ date('Y-m-d') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="mm/dd/yyyy" required>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="interview_time"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Time*</label>
+                                <input type="time" name="interview_time" id="interview_time"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="meeting_link"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Meeting Link</label>
+                                <input type="text" name="meeting_link" id="meeting_link"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="e.g. https://meet.google.com/abc-defg-hij">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="notes"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Notes</label>
+                                <textarea name="notes" id="notes" rows="3"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="e.g. Interview agenda, topics to discuss, etc."></textarea>
+                            </div>
+
+                        </div>
+                        <button type="submit"
+                            class="text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                            <svg class="mr-1 -ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Create Appointment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End schedule modal -->
 
     <!-- Modal  Edit-->
     <div id="edit-modal" tabindex="-1" aria-hidden="true"
@@ -314,60 +475,102 @@
                         @method('PUT')
                         <input type="hidden" name="edit_id" id="edit_id">
                         <div class="grid ml-1 mr-1 gap-2 mb-2 sm:grid-cols-2">
-                            <div class="sm:col-span-2">
-                                <label for="edit_position"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Position*</label>
-                                <input type="text" name="edit_position" id="edit_position"
+                            <div class="w-full md:col-span-2">
+                                <label for="edit_company_id"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Company Name*</label>
+                                <input type = "text" name="edit_company_id" id="edit_company_id"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. SANAI Digital Solutions Inc." required>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label for="edit_industry"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Industry*</label>
-                                <input type="text" name="edit_industry" id="edit_industry"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Information Technology" required>
+                                    required>
+                                </input>
                             </div>
 
-                            <div class="md:col-span-2">
-                                <label for="edit_contact_person"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Contact Person*</label>
-                                <input type="text" name="edit_contact_person" id="edit_contact_person"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Juan Dela Cruz" required>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label for="edit_email"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Email Address*</label>
-                                <input type="email" name="edit_email" id="edit_email"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. juan.delacruz@yahoo.com" required>
-                            </div>
-                            <div class="md:col-span-1">
-                                <label for="edit_location"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Location*</label>
-                                <input type="text" name="edit_location" id="edit_location"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Imus, Cavite" required>
+                            <div class="w-full md:col-span-2">
+                                <label for="edit_job_id"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Job
+                                    Title*</label>
+                                <input type="text" name="edit_job_id" id="edit_job_id"
+                                    class=" bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                </input>
                             </div>
 
-                            <div class="md:col-span-1">
-                                <label for="edit_status"
-                                    class="block text-xs font-medium text-gray-900 dark:text-white">Status*</label>
-                                <select id="edit_status" name="edit_status"
+                            <div class="w-full md:col-span-2">
+                                <label for="edit_applicant_id"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Applicant Name*</label>
+                                <input type="text" name="edit_applicant_id" id="edit_applicant_id"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                </input>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="edit_meeting_type"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Meeting Type*</label>
+                                <select id="edit_meeting_type" name="edit_meeting_type"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
                                     required>
-                                    {{-- <option selected="">Select product type</option> --}}
-                                    <option value="1">Active</option>
-                                    <option value="0">Inactive</option>
+                                    <option value="" selected>Select type</option>
+                                    <option value="1">In-person</option>
+                                    <option value="2">Online</option>
                                 </select>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="edit_interview_round"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Round*</label>
+                                <select id="edit_interview_round" name="edit_interview_round"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                                    <option value="" selected>Select round</option>
+                                    <option value="1">First Round</option>
+                                    <option value="2">Second Round</option>
+                                    <option value="3">Third Round</option>
+                                    <option value="4">Final Round</option>
+                                    <option value="5">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="edit_interview_date"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Date*</label>
+                                <input type="date" name="edit_interview_date" id="edit_interview_date"
+                                    min="{{ date('Y-m-d') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="mm/dd/yyyy" required>
+                            </div>
+
+                            <div class="sm:col-span-1">
+                                <label for="edit_interview_time"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Interview
+                                    Time*</label>
+                                <input type="time" name="edit_interview_time" id="edit_interview_time"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    required>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="edit_meeting_link"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Meeting Link</label>
+                                <input type="text" name="edit_meeting_link" id="edit_meeting_link"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="e.g. https://meet.google.com/abc-defg-hij">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="edit_notes"
+                                    class="block text-xs font-medium text-gray-900 dark:text-white">Notes</label>
+                                <textarea name="edit_notes" id="edit_notes" rows="3"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                    placeholder="e.g. Interview agenda, topics to discuss, etc."></textarea>
                             </div>
                         </div>
 
                         <button type="submit"
                             class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
                             {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
-                            Update Company
+                            Update Appointment
                         </button>
                     </form>
                 </div>
@@ -390,6 +593,105 @@
                     successMessage.remove();
                 }
             }, 3000);
+        }
+
+        function editAppointment(button) {
+            const id = button.getAttribute('data-id');
+            const resumeId = button.getAttribute('data-resume-id');
+            const companyName = button.getAttribute('data-company-name');
+            const jobTitle = button.getAttribute('data-job-title');
+            const applicantName = button.getAttribute('data-applicant-name');
+            const interviewDate = button.getAttribute('data-interview-date');
+            const interviewTime = button.getAttribute('data-interview-time');
+            const interviewRound = button.getAttribute('data-interview-round');
+            const meetingLink = button.getAttribute('data-meeting-link');
+            const meetingType = button.getAttribute('data-meeting-type');
+            const notes = button.getAttribute('data-notes');
+            const status = button.getAttribute('data-status');
+
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_company_id').value = companyName;
+            document.getElementById('edit_job_id').value = jobTitle;
+            document.getElementById('edit_applicant_id').value = applicantName;
+            document.getElementById('edit_meeting_type').value = meetingType;
+            document.getElementById('edit_interview_round').value = interviewRound;
+            document.getElementById('edit_interview_date').value = interviewDate;
+            document.getElementById('edit_interview_time').value = interviewTime;
+            document.getElementById('edit_meeting_link').value = meetingLink;
+            document.getElementById('edit_notes').value = notes;
+
+            // Set form action
+            const form = document.getElementById('editForm');
+            form.action = `/appointment/${id}`;
+        }
+
+        document.getElementById('company_id').addEventListener('change', function() {
+            const companySelect = this.value;
+            if (companySelect) {
+                fetch(`/api/companies/${companySelect}/jobs`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const jobSelect = document.getElementById('job_id');
+                        jobSelect.innerHTML = '<option value="" selected>Select Job</option>';
+                        data.forEach(job => {
+                            const option = document.createElement('option');
+                            option.value = job.id;
+                            option.textContent = job.title;
+                            jobSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching jobs:', error));
+            } else {
+                document.getElementById('job_id').innerHTML = '<option value="" selected>Select Job</option>';
+            }
+        });
+
+        document.getElementById('job_id').addEventListener('change', function() {
+            const jobSelect = this.value;
+            if (jobSelect) {
+                fetch(`/api/jobs/${jobSelect}/applicants`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const applicantSelect = document.getElementById('applicant_id');
+                        applicantSelect.innerHTML = '<option value="" selected>Select Applicant</option>';
+                        data.forEach(applicant => {
+                            const option = document.createElement('option');
+                            option.value = applicant.id;
+                            option.textContent =
+                                `${applicant.applicant_name} - ${applicant.match_percentage ? `(${applicant.match_percentage}%)` : ''}`;
+                            applicantSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching applicants:', error));
+            } else {
+                document.getElementById('applicant_id').innerHTML =
+                    '<option value="" selected>Select Applicant</option>';
+            }
+        });
+
+        function markAsComplete(button) {
+            const id = button.getAttribute('data-id');
+            const applicantName = button.getAttribute('data-applicant-name');
+
+            if (confirm(`Are you sure you want to mark the appointment with ${applicantName} as complete?`)) {
+                fetch(`/appointment/${id}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Optionally, show a success message or update the UI
+                            location.reload(); // Reload the page to reflect changes
+                        } else {
+                            alert('Failed to mark appointment as complete. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error marking appointment as complete:', error));
+            }
         }
     </script>
 @endsection
