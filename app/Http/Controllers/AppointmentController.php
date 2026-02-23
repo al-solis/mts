@@ -193,4 +193,19 @@ class AppointmentController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Appointment marked as complete']);
     }
+
+    public function markAsFailed($id)
+    {
+        $appointment = appointment::findOrFail($id);
+        $appointment->update([
+            'tag' => 2, // Mark as failed
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        // Update resume tag to indicate interview failed
+        Resume::where('id', $appointment->resume_id)->update(['tag' => 4]); // 4 = Interview Failed
+
+        return response()->json(['success' => true, 'message' => 'Appointment marked as failed']);
+    }
 }

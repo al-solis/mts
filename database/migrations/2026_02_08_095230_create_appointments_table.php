@@ -20,7 +20,8 @@ return new class extends Migration {
             $table->dateTime('interview_time');
             $table->text('meeting_link')->nullable(); // For virtual meetings
             $table->text('notes')->nullable();
-            $table->integer('status')->default(0); // 0 for scheduled, 1 for completed, 2 for canceled
+            $table->integer('status')->default(0); // 0 for scheduled, 1 for completed, 2 for cancelled
+            $table->integer('tag')->default(0); // 0 for no tag, 1 passed, 2 failed
             $table->unsignedBigInteger('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->unsignedBigInteger('updated_by')->nullable();

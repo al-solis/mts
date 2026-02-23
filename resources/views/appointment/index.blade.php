@@ -263,38 +263,82 @@
                             <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                                 <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 16 16">
                                     <path
-                                        d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647z" />
+                                        d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0" />
+                                    <path
+                                        d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z" />
                                 </svg>
                             </div>
 
                             <div>
                                 <p class="font-semibold">
-                                    {{ $appt->resume->file_name }}
+                                    {{ $appt->resume->applicant_name }}
                                     <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                                         Completed
                                     </span>
+                                    @if ($appt->tag == 2)
+                                        <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">
+                                            Failed
+                                        </span>
+                                    @elseif ($appt->tag == 1)
+                                        <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-green-700">
+                                            Passed
+                                        </span>
+                                    @endif
                                 </p>
 
-                                <p class="text-xs text-gray-500">
-                                    {{ $appt->interview_round }}
+                                <span
+                                    class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
+                                    {{ $appt->meeting_type == 2 ? 'Online' : 'In-person' }}
+                                </span>
+                                <span class="ml-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100">
+                                    @php
+                                        $roundLable = [
+                                            1 => 'First Round',
+                                            2 => '2nd Round',
+                                            3 => 'Third Round',
+                                            4 => 'Final Round',
+                                            5 => 'Other',
+                                        ];
+                                    @endphp
+                                    {{ $roundLable[$appt->interview_round] ?? 'Other' }}
+                                </span>
+                                <p class="text-sm text-gray-500">
+                                    {{ $appt->resume->job->title ?? '—' }}
                                 </p>
-
                                 <div class="flex gap-4 text-xs text-gray-500 mt-1">
-                                    <span>📅 {{ $appt->interview_date->format('m/d/Y') }}</span>
-                                    <span>⏰ {{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
+                                    <span><i
+                                            class="bi bi-calendar"></i>{{ $appt->interview_date->format('m/d/Y') }}</span>
+                                    <span><i
+                                            class="bi bi-clock"></i>{{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
                                 </div>
+                                <p class="italic text-sm text-gray-500 mt-1">
+                                    {{ $appt->notes }}
+                                </p>
                             </div>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button class="px-3 py-1 text-xs bg-gray-900 text-white rounded-lg">
-                                📅 Schedule Next Round
-                            </button>
+                        @if ($appt->tag == 0)
+                            <div class="flex gap-2">
+                                <button
+                                    class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    <i class="bi bi-calendar3 mr-1"></i>Schedule Next Round
+                                </button>
 
-                            <button class="px-3 py-1 text-xs bg-gray-900 text-white rounded-lg">
-                                👍 Recommend
-                            </button>
-                        </div>
+                                <button
+                                    class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    <i class="bi bi-star mr-1"></i>Recommend
+                                </button>
+
+                                <button type="button" data-id = "{{ $appt->id }}"
+                                    data-applicant-name="{{ $appt->resume->applicant_name }}"
+                                    onclick="markAsFailed(this)"
+                                    class="px-3 py-1 text-white inline-flex items-center bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    <i class="bi bi-x-circle mr-1"></i>Failed
+                                </button>
+
+                            </div>
+                        @endif
+
                     </div>
                 @empty
                     <p class="text-center text-gray-400 py-6">No completed appointments</p>
@@ -691,6 +735,31 @@
                         }
                     })
                     .catch(error => console.error('Error marking appointment as complete:', error));
+            }
+        }
+
+        function markAsFailed(button) {
+            const id = button.getAttribute('data-id');
+            const applicantName = button.getAttribute('data-applicant-name');
+
+            if (confirm(`Are you sure you want to mark the appointment with ${applicantName} as failed?`)) {
+                fetch(`/appointment/${id}/fail`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Optionally, show a success message or update the UI
+                            location.reload(); // Reload the page to reflect changes
+                        } else {
+                            alert('Failed to mark appointment as failed. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error marking appointment as failed:', error));
             }
         }
     </script>

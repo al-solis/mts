@@ -253,7 +253,8 @@
                 const tagLabel = row.tag == 1 ? 'Scheduled' :
                     row.tag == 2 ? 'Passed' :
                     row.tag == 3 ? 'Hold' :
-                    row.tag == 4 ? 'Rejected' :
+                    row.tag == 4 ? 'Failed' :
+                    row.tag == 5 ? 'Cancelled' :
                     'Pending';
 
                 const tagColor = row.tag == 1 ? 'bg-blue-300 text-blue-800 border-blue-400' :

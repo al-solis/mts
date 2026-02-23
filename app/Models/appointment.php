@@ -17,6 +17,7 @@ class appointment extends Model
         'meeting_link',
         'notes',
         'status',
+        'tag',
         'created_by',
         'updated_by'
     ];

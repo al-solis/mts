@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/companies/{companyId}/jobs', [JobController::class, 'getJobsByCompany']);
     Route::get('/api/jobs/{jobId}/applicants', [ResumeController::class, 'getApplicantsByJob']);
     Route::post('/appointment/{id}/complete', [AppointmentController::class, 'markAsComplete'])->name('appointment.complete');
+    Route::post('/appointment/{id}/fail', [AppointmentController::class, 'markAsFailed'])->name('appointment.fail');
 });
 
 require __DIR__ . '/auth.php';
