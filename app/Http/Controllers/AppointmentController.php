@@ -199,6 +199,7 @@ class AppointmentController extends Controller
         $appointment = appointment::findOrFail($id);
         $appointment->update([
             'tag' => 2, // Mark as failed
+            'status' => 1, // Mark as completed
             'updated_by' => Auth::id(),
             'updated_at' => now(),
         ]);
@@ -207,5 +208,36 @@ class AppointmentController extends Controller
         Resume::where('id', $appointment->resume_id)->update(['tag' => 4]); // 4 = Interview Failed
 
         return response()->json(['success' => true, 'message' => 'Appointment marked as failed']);
+    }
+
+    public function markAsPassed($id)
+    {
+        $appointment = appointment::findOrFail($id);
+        $appointment->update([
+            'tag' => 1, // Mark as passed
+            'status' => 1, // Mark appointment as completed
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        // Update resume tag to indicate interview passed
+        Resume::where('id', $appointment->resume_id)->update(['tag' => 2]); // 2 = Interview Passed
+
+        return response()->json(['success' => true, 'message' => 'Appointment marked as passed']);
+    }
+
+    public function scheduleNextRound($id)
+    {
+        $appointment = appointment::findOrFail($id);
+        $appointment->update([
+            'interview_round' => $appointment->interview_round + 1,
+            'interview_date' => now()->addDays(3),
+            'interview_time' => now()->addDays(3)->format('H:i'),
+            'status' => 0, // Reset status to upcoming
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('appointment.index')->with('success', 'Next round scheduled successfully');
     }
 }

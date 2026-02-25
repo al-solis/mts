@@ -87,28 +87,6 @@
             </div>
         </div>
 
-        {{-- <form action="" method="GET">
-            <div class="flex flex-col md:flex-row gap-2 text-xs md:text-sm">
-                <div class="md:w-2/3 w-full">
-                    <input type="text" id="simple-search" name="search" placeholder="Search by name or description..."
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                        value = "{{ request()->query('search') }}" oninput="this.form.submit()">
-                </div>
-
-                <div class="md:w-1/3 w-full">
-                    <select id="status" name="status"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                        onchange="this.form.submit()">
-                        <option value="">All Status</option>
-                        <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit"
-                class="hidden mt-4 w-full shrink-0 rounded-lg bg-gray-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800 sm:mt-0 sm:w-auto">Search</button>
-        </form> --}}
-
         {{-- Table --}}
         <div class="bg-white p-2 rounded-xl shadow">
             <div class="ml-2 mr-2">
@@ -263,7 +241,13 @@
                     row.tag == 4 ? 'bg-red-300 text-red-800 border-red-400' :
                     'bg-gray-300 text-gray-800 border-gray-400';
 
-                const scheduleBtn = row.tag == 0 ?
+                const interviewRoundLabel = row.interview_round == 1 ? '- First Round' :
+                    row.interview_round == 2 ? '- Second Round' :
+                    row.interview_round == 3 ? '- Third Round' :
+                    row.interview_round == 4 ? '- Final Round' :
+                    row.interview_round == 5 ? '- Other' : '';
+
+                const scheduleBtn = row.tag == 0 && interviewRoundLabel == '' ?
                     `<button type="button"                             
                             onclick="scheduleInterview(${index}, ${row.id}, '${row.applicant}')"
                             class="inline-flex items-center gap-1 px-3 py-1 text-xs border rounded-lg hover:bg-gray-100">
@@ -305,11 +289,13 @@
                                     <div class="text-sm ${matchColor} mr-2">
                                         ${match.toFixed(0)}% Match - ${matchLabel}
                                     </div>
+                                    
                                     <div class="flex justify-start">
                                         <div class="inline-flex items-center justify-center 
                                                     ${tagColor} text-xs font-semibold 
                                                     rounded-full text-white px-2 py-0.5 w-fit">
-                                            ${tagLabel}
+                                            ${tagLabel}  
+                                            ${interviewRoundLabel}
                                         </div>
                                     </div>
                                 </div>
@@ -563,7 +549,7 @@
         });
 
         function scheduleInterview(rowid, id, name) {
-            const confirmSchedule = confirm('Schedule interview for ' + name + '?');
+            const confirmSchedule = confirm('Are you sure you want to schedule ' + name + ' for an interview?');
             if (!confirmSchedule) {
                 return;
             }
@@ -593,7 +579,7 @@
         function markAsPassed(button) {
             const id = button.getAttribute('data-id');
             const name = button.getAttribute('data-applicant-name') || 'this candidate';
-            const confirmPass = confirm('Mark ' + name + ' as passed?');
+            const confirmPass = confirm('Are you sure you want to mark ' + name + ' as passed?');
             if (!confirmPass) {
                 return;
             }

@@ -7,6 +7,7 @@ use App\Http\Controllers\JobController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DeploymentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/jobs/{jobId}/applicants', [ResumeController::class, 'getApplicantsByJob']);
     Route::post('/appointment/{id}/complete', [AppointmentController::class, 'markAsComplete'])->name('appointment.complete');
     Route::post('/appointment/{id}/fail', [AppointmentController::class, 'markAsFailed'])->name('appointment.fail');
+    Route::post('/appointment/{id}/pass', [AppointmentController::class, 'markAsPassed'])->name('appointment.pass');
+    Route::get('/appointment/{id}/schedule-next-round', [AppointmentController::class, 'scheduleNextRound']);
+
+    Route::resource('deployment', DeploymentController::class)->except(['destroy']);
 });
 
 require __DIR__ . '/auth.php';

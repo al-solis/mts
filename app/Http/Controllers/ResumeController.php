@@ -29,7 +29,12 @@ class ResumeController extends Controller
 
     public function getByJob($jobId)
     {
-        $resumes = Resume::with('job')
+        $resumes = Resume::with([
+            'job',
+            'appointments' => function ($query) {
+                $query->latest();
+            }
+        ])
             ->where('job_posting_id', $jobId)
             ->orderBy('created_at', 'desc')
             ->get()
@@ -50,6 +55,7 @@ class ResumeController extends Controller
                     'status' => $resume->status,
                     'passing_threshold' => $passingThreshold,
                     'tag' => $resume->tag,
+                    'interview_round' => $resume->appointments->first()?->interview_round ?? null,
                     'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
                 ];
             });

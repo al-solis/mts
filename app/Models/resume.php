@@ -45,4 +45,9 @@ class Resume extends Model
     {
         return $this->hasMany(appointment::class, 'resume_id');
     }
+
+    public function deployments()
+    {
+        return $this->hasMany(deployment::class, 'resume_id');
+    }
 }

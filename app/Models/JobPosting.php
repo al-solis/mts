@@ -32,4 +32,9 @@ class JobPosting extends Model
     {
         return $this->hasMany(Resume::class, 'job_posting_id');
     }
+
+    public function deployments()
+    {
+        return $this->hasManyThrough(Deployment::class, Resume::class, 'job_posting_id', 'resume_id');
+    }
 }

@@ -319,14 +319,18 @@
 
                         @if ($appt->tag == 0)
                             <div class="flex gap-2">
-                                <button
+                                <button type="button" data-id = "{{ $appt->id }}"
+                                    data-applicant-name="{{ $appt->resume->applicant_name }}"
+                                    onclick="scheduleNextRound(this)"
                                     class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
                                     <i class="bi bi-calendar3 mr-1"></i>Schedule Next Round
                                 </button>
 
-                                <button
-                                    class="px-3 py-1 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
-                                    <i class="bi bi-star mr-1"></i>Recommend
+                                <button type="button" data-id = "{{ $appt->id }}"
+                                    data-applicant-name="{{ $appt->resume->applicant_name }}"
+                                    onclick="markAsPassed(this)"
+                                    class="px-3 py-1 text-white inline-flex items-center bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-md text-xs text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    <i class="bi bi-check2-circle mr-1"></i>Passed
                                 </button>
 
                                 <button type="button" data-id = "{{ $appt->id }}"
@@ -760,6 +764,40 @@
                         }
                     })
                     .catch(error => console.error('Error marking appointment as failed:', error));
+            }
+        }
+
+        function markAsPassed(button) {
+            const id = button.getAttribute('data-id');
+            const applicantName = button.getAttribute('data-applicant-name');
+
+            if (confirm(`Are you sure you want to mark the appointment with ${applicantName} as passed?`)) {
+                fetch(`/appointment/${id}/pass`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Optionally, show a success message or update the UI
+                            location.reload(); // Reload the page to reflect changes
+                        } else {
+                            alert('Failed to mark appointment as passed. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error marking appointment as passed:', error));
+            }
+        }
+
+        function scheduleNextRound(button) {
+            const id = button.getAttribute('data-id');
+            const applicantName = button.getAttribute('data-applicant-name');
+
+            if (confirm(`Are you sure you want to schedule the next round for ${applicantName}?`)) {
+                window.location.href = `/appointment/${id}/schedule-next-round`;
             }
         }
     </script>
