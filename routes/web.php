@@ -8,6 +8,8 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DeploymentController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -46,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/appointment/{id}/schedule-next-round', [AppointmentController::class, 'scheduleNextRound']);
 
     Route::resource('deployment', DeploymentController::class)->except(['destroy']);
+
+    Route::resource('billing', InvoiceController::class)->except(['destroy']);
+    Route::resource('payment', PaymentController::class)->except(['destroy']);
+
+
 });
 
 require __DIR__ . '/auth.php';
