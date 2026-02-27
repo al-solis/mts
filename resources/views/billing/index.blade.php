@@ -249,10 +249,11 @@
                                 <th class="px-6 py-3">Invoice #</th>
                                 <th class="px-6 py-3">Company</th>
                                 <th class="px-6 py-3">Description</th>
-                                <th class="px-6 py-3">Billing Period</th>
                                 <th class="px-6 py-3">Amount</th>
+                                <th class="px-6 py-3">Paid</th>
+                                <th class="px-6 py-3">Balance</th>
                                 <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Invoice Date</th>
+                                <th class="px-6 py-3">Date</th>
                                 <th class="px-6 py-3">Due Date</th>
                                 <th class="px-6 py-3">Action</th>
                             </tr>
@@ -269,18 +270,21 @@
                                     <td class="px-6 py-4">
                                         {{ Str::limit($invoice->description, 50) }}
                                     <td class="px-6 py-4">
-                                        {{ $invoice->billing_cycle }}
-                                    </td>
-                                    <td class="px-6 py-4">
                                         ₱{{ number_format($invoice->amount, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-green-700">
+                                        ₱{{ number_format($invoice->payment, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-red-700">
+                                        ₱{{ number_format($invoice->amount - $invoice->payment, 2) }}
                                     </td>
                                     <td class="px-6 py-4">
                                         @if ($invoice->status == 1)
                                             <span
-                                                class="px-2 py-1 text-xs bg-green-100 text-yellow-700 rounded-full">Partial</span>
+                                                class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">Partial</span>
                                         @elseif($invoice->status == 2)
                                             <span
-                                                class="px-2 py-1 text-xs bg-yellow-100 text-green-700 rounded-full">Paid</span>
+                                                class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Paid</span>
                                         @else
                                             <span
                                                 class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Unpaid</span>
@@ -292,7 +296,7 @@
                                     <td class="px-6 py-4">
                                         {{ $invoice->due_date }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 flex items-center justify-center space-x-2">
                                         <button type="button" title="Edit invoice : {{ $invoice->invoice_number }}"
                                             data-modal-target="edit-modal" data-modal-toggle="edit-modal"
                                             data-id="{{ $invoice->id }}" data-company_id="{{ $invoice->company_id }}"
@@ -314,7 +318,26 @@
                                                 <path fill-rule="evenodd"
                                                     d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
                                             </svg>
-                                            {{-- <span class="hidden group-hover:inline transition-opacity duration-200"></span> --}}
+                                        </button>
+
+                                        <button type="button" title="Pay invoice : {{ $invoice->invoice_number }}"
+                                            data-modal-target="payment-modal" data-modal-toggle="payment-modal"
+                                            data-id="{{ $invoice->id }}"
+                                            data-invoice_number="{{ $invoice->invoice_number }}"
+                                            data-invoice_date="{{ $invoice->invoice_date }}"
+                                            data-company_name="{{ $invoice->company->name }}"
+                                            data-amount="{{ $invoice->amount }}" data-payment="{{ $invoice->payment }}"
+                                            data-payment_method="{{ $invoice->payment_method }}"
+                                            data-balance="{{ $invoice->amount - $invoice->payment }}"
+                                            onclick="payInvoice(this)"
+                                            class="group flex space-x-1 text-gray-500 hover:text-green-600 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
+                                                <path
+                                                    d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z" />
+                                                <path
+                                                    d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+                                            </svg>
                                         </button>
                                     </td>
                                 </tr>
@@ -595,12 +618,13 @@
                                             <option value="5">Online Payment</option>
                                         </select>
                                     </div>
+                                </div>
 
-                                    <button type="submit"
-                                        class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
-                                        {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
-                                        Update Invoice
-                                    </button>
+                                <button type="submit"
+                                    class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
+                                    Update Invoice
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -608,6 +632,131 @@
             </div>
             <!-- End edit modal -->
 
+            <!-- Payment  Modal-->
+            <div id="payment-modal" tabindex="-1" aria-hidden="true"
+                class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div class="relative p-2 w-full max-w-md max-h-full">
+                    <!-- Modal content -->
+                    <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                        <!-- Modal header -->
+                        <div
+                            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Receive Payment
+                            </h3>
+                            <button type="button"
+                                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                data-modal-toggle="payment-modal">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                </svg>
+                                <span class="sr-only">Close</span>
+                            </button>
+                        </div>
+                        <!-- Modal body -->
+                        <div class="overflow-y-auto max-h-[70vh]">
+                            <form id="paymentForm" class="p-4 md:p-5" method="POST">
+                                @csrf
+                                <input type="hidden" name="payment_id" id="payment_id">
+                                <div class="grid ml-1 mr-1 gap-2 mb-2 sm:grid-cols-2">
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Invoice #:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="pay_invoice_number" name="pay_invoice_number"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Company:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="pay_company_name" name="pay_company_name"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Total Amount:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="pay_total_amount" name="pay_total_amount"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Already Paid:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-green-900 dark:text-white"
+                                        id="pay_already_paid" name="pay_already_paid"></div>
+
+                                    <div class="mt-2 block text-xs font-semibold border-t text-gray-900 dark:text-white">
+                                        Outstanding Balance:
+                                    </div>
+                                    <div class="mt-2 block text-xs font-semibold text-right border-t text-red-900 dark:text-white"
+                                        id="pay_outstanding_balance" name="pay_outstanding_balance"></div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="pay_amount"
+                                            class="mt-2 block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Amount*</label>
+                                        <input type="number" name="pay_amount" id="pay_amount" min="0"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="1000" required>
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-1">
+                                        <label for="pay_date"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Date*</label>
+                                        <input type="date" name="pay_date" id="pay_date"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="mm/dd/yyyy" required>
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-1">
+                                        <label for="pay_payment_method"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Method*</label>
+                                        <select name="pay_payment_method" id="pay_payment_method"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="1000" required>
+                                            <option value="1">Bank Transfer</option>
+                                            <option value="2">Credit Card</option>
+                                            <option value="3">Cash</option>
+                                            <option value="4">Check</option>
+                                            <option value="5">Online Payment</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="pay_reference"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Reference*</label>
+                                        <input type="text" name="pay_reference" id="pay_reference"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="e.g. Check no./ bank transfer reference">
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="pay_notes"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Notes</label>
+                                        <textarea type="text" name="pay_notes" id="pay_notes"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="e.g. Partial payment, etc." required></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit"
+                                    class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-4 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
+                                    Pay Invoice
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End payment modal -->
 
             <script>
                 function clearModalFields() {
@@ -641,6 +790,36 @@
                     // Set form action
                     const form = document.getElementById('editForm');
                     form.action = `/billing/${id}`;
+                }
+
+                function payInvoice(button) {
+                    const id = button.getAttribute('data-id');
+                    document.getElementById('pay_invoice_number').textContent = button.getAttribute('data-invoice_number');
+                    document.getElementById('pay_company_name').textContent = button.getAttribute('data-company_name');
+                    document.getElementById('pay_total_amount').textContent = parseFloat(button.getAttribute('data-amount'))
+                        .toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'PHP'
+                        });
+                    document.getElementById('pay_already_paid').textContent = parseFloat(button.getAttribute('data-payment'))
+                        .toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'PHP'
+                        });
+                    const balance = button.getAttribute('data-balance');
+                    document.getElementById('pay_outstanding_balance').textContent = parseFloat(balance).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'PHP'
+                    });
+                    document.getElementById('pay_amount').setAttribute('max', balance);
+                    document.getElementById('pay_amount').value = balance > 0 ? balance : 0;
+                    document.getElementById('pay_payment_method').value = button.getAttribute('data-payment_method');
+
+                    document.getElementById('pay_date').setAttribute('min', button.getAttribute('data-invoice_date'));
+
+                    // Set form action
+                    const form = document.getElementById('paymentForm');
+                    form.action = `/billing/${id}/pay`;
                 }
             </script>
         @endsection

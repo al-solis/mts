@@ -123,4 +123,58 @@ class InvoiceController extends Controller
 
         return redirect()->route('billing.index')->with('success', 'Invoice updated successfully.');
     }
+
+    public function payInvoice(Request $request, $invoice)
+    {
+        $request->validate([
+            'pay_amount' => 'required|numeric|min:0',
+            'pay_reference' => 'required|string|max:255',
+            'pay_date' => 'required|date',
+            'pay_payment_method' => 'required|string|max:255',
+        ]);
+
+        $invoice = Invoice::findOrFail($invoice);
+
+        $paymentSum = Payment::where('invoice_id', $invoice->id)
+            ->where('status', 1)
+            ->sum('amount');
+
+        $balance = $invoice->amount - $paymentSum;
+
+        if ($request->pay_amount > $balance) {
+            return redirect()->route('billing.index')->with('error', 'Payment amount cannot be greater than outstanding balance.');
+        }
+
+        $prefix = 'PYMT';
+        $year = now()->year;
+        $count = Payment::whereYear('created_at', $year)->count() + 1;
+        $paymentReference = $prefix . '-' . $year . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
+
+        Payment::create([
+            'payment_number' => $paymentReference,
+            'invoice_id' => $invoice->id,
+            'amount' => $request->pay_amount,
+            'payment_date' => $request->pay_date,
+            'payment_method' => $request->pay_payment_method,
+            'reference' => $request->pay_reference,
+            'notes' => $request->pay_notes,
+            'status' => 1, // Paid
+            'created_by' => Auth::id(),
+            'created_at' => now(),
+        ]);
+
+        // Update invoice payment sum
+        $totalPayment = Payment::where('invoice_id', $invoice->id)
+            ->where('status', 1)
+            ->sum('amount');
+
+        $invoice->update([
+            'payment' => $totalPayment,
+            'status' => $totalPayment >= $invoice->amount ? 2 : 1, // Paid or Partially Paid
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('billing.index')->with('success', 'Payment recorded successfully.');
+    }
 }
