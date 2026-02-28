@@ -15,10 +15,14 @@ use App\Models\Payment;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $totalBilled = Invoice::sum('amount');
-        $totalCollected = Invoice::sum('payment');
+        $search = $request->input('search');
+        $searchCompany = $request->input('searchCompany');
+        $status = $request->input('status');
+
+        $totalBilled = Invoice::where('status', '!=', 3)->sum('amount');
+        $totalCollected = Invoice::where('status', '!=', 3)->sum('payment');
         $outstandingBalance = $totalBilled - $totalCollected;
         $overdueInvoices = Invoice::where('due_date', '<', now())->where('status', '!=', 2)->count();
 
@@ -50,11 +54,52 @@ class InvoiceController extends Controller
             $company->balance = $company->total_billed - $company->total_collected;
         }
 
-        $invoices = Invoice::with('company')->get();
+        $query = Invoice::with('company');
+        $query2 = Payment::with('invoice');
+
+        if ($searchCompany) {
+            $query->where('company_id', $searchCompany);
+            $query2->whereHas('invoice', function ($q) use ($searchCompany) {
+                $q->where('company_id', $searchCompany);
+            });
+        }
+
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('invoice_number', 'like', "%$search%")
+                    ->orWhere('description', 'like', "%$search%");
+            });
+        }
+
+        if ($status !== null) {
+            if ($status == 1) {
+                $query->whereIn('status', [1, 2]);
+                $query2->where('status', 1);
+            } else if ($status == 2) {
+                $query->where('status', 3);
+                $query2->where('status', 2);
+
+            } else {
+                $query->where('status', $status);
+                $query2->whereHas('invoice', function ($q) use ($status) {
+                    $q->where('status', $status);
+                });
+            }
+        }
+
+        if ($searchCompany) {
+            $query->where('company_id', $searchCompany);
+            $query2->whereHas('invoice', function ($q) use ($searchCompany) {
+                $q->where('company_id', $searchCompany);
+            });
+        }
+
+        $invoices = $query->get();
+        $payments = $query2->get();
 
         return view(
             'billing.index',
-            compact('invoices', 'companies', 'totalBilled', 'totalCollected', 'outstandingBalance', 'overdueInvoices')
+            compact('invoices', 'payments', 'companies', 'totalBilled', 'totalCollected', 'outstandingBalance', 'overdueInvoices')
         );
     }
 
@@ -109,6 +154,10 @@ class InvoiceController extends Controller
             return redirect()->route('billing.index')->with('error', 'Cannot change amount for an invoice. Payments is greater than invoice amount.');
         }
 
+        if ($request->edit_amount < $paymentSum) {
+            return redirect()->route('billing.index')->with('error', 'Cannot set invoice amount less than total payments. Payments is greater than invoice amount.');
+        }
+
         $invoice->update([
             'invoice_date' => $request->edit_invoice_date,
             'description' => $request->edit_description,
@@ -121,6 +170,16 @@ class InvoiceController extends Controller
             'updated_at' => now(),
         ]);
 
+        if ($invoice->payment < $invoice->amount) {
+            $invoice->update([
+                'status' => 1, // Partially Paid
+            ]);
+        } else {
+            $invoice->update([
+                'status' => 2, // Paid
+            ]);
+        }
+
         return redirect()->route('billing.index')->with('success', 'Invoice updated successfully.');
     }
 
@@ -128,7 +187,7 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'pay_amount' => 'required|numeric|min:0',
-            'pay_reference' => 'required|string|max:255',
+            'pay_reference' => 'nullable|string|max:255',
             'pay_date' => 'required|date',
             'pay_payment_method' => 'required|string|max:255',
         ]);
@@ -176,5 +235,99 @@ class InvoiceController extends Controller
         ]);
 
         return redirect()->route('billing.index')->with('success', 'Payment recorded successfully.');
+    }
+
+    public function voidInvoice(Request $request, $invoice)
+    {
+        $invoice = Invoice::findOrFail($invoice);
+
+        $paymentSum = Payment::where('invoice_id', $invoice->id)
+            ->where('status', 1)
+            ->sum('amount');
+
+        if ($paymentSum > 0) {
+            return redirect()->route('billing.index')->with('error', 'Cannot void invoice with payments. Please void the payment(s) associated with this invoice first before voiding the invoice.');
+        }
+
+        $invoice->update([
+            'status' => 3, // Voided
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('billing.index')->with('success', 'Invoice voided successfully.');
+    }
+
+    public function voidPayment(Request $request, $paymentId)
+    {
+        $payment = Payment::findOrFail($paymentId);
+
+        $payment->update([
+            'status' => 2,
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        $totalPayment = Payment::where('invoice_id', $payment->invoice_id)
+            ->where('status', 1)
+            ->sum('amount');
+
+        //update invoice
+        DB::table('invoices')
+            ->where('id', $payment->invoice_id)
+            ->update([
+                'payment' => $totalPayment,
+                'status' => $totalPayment >= $payment->invoice->amount ? 2 : ($totalPayment == 0 ? 0 : 1),
+            ]);
+
+        return redirect()->route('billing.index')->with('success', 'Payment voided successfully.');
+    }
+
+    public function updatePayment(Request $request, $paymentId)
+    {
+        $request->validate([
+            'edit_pay_amount' => 'required|numeric|min:0',
+            'edit_pay_reference' => 'nullable|string|max:255',
+            'edit_pay_date' => 'required|date',
+            'edit_pay_payment_method' => 'required|string|max:255',
+        ]);
+
+        $payment = Payment::findOrFail($paymentId);
+        $invoice = Invoice::findOrFail($payment->invoice_id);
+
+        $paymentSumExcludingCurrent = Payment::where('invoice_id', $invoice->id)
+            ->where('status', 1)
+            ->where('id', '!=', $payment->id)
+            ->sum('amount');
+
+        $balance = $invoice->amount - $paymentSumExcludingCurrent;
+
+        if ($request->edit_pay_amount > $balance) {
+            return redirect()->route('billing.index')->with('error', 'Payment amount cannot be greater than outstanding balance.');
+        }
+
+        $payment->update([
+            'amount' => $request->edit_pay_amount,
+            'payment_date' => $request->edit_pay_date,
+            'payment_method' => $request->edit_pay_payment_method,
+            'reference' => $request->edit_pay_reference,
+            'notes' => $request->edit_pay_notes,
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        $totalPayment = Payment::where('invoice_id', $invoice->id)
+            ->where('status', 1)
+            ->sum('amount');
+
+        // Update invoice payment sum
+        $invoice->update([
+            'payment' => $totalPayment,
+            'status' => $totalPayment >= $invoice->amount ? 2 : 1, // Paid or Partially Paid
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('billing.index')->with('success', 'Payment updated successfully.');
     }
 }

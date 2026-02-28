@@ -50,9 +50,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('deployment', DeploymentController::class)->except(['destroy']);
 
     Route::post('/billing/{invoice}/pay', [InvoiceController::class, 'payInvoice'])->name('billing.pay');
-    Route::resource('billing', InvoiceController::class)->except(['destroy']);
-    Route::resource('payment', PaymentController::class)->except(['destroy']);
+    Route::get('/billing/{invoice}/void', [InvoiceController::class, 'voidInvoice'])->name('billing.void');
+    Route::post('/payment/{payment}/void', [InvoiceController::class, 'voidPayment']);
+    Route::put('/payment/{payment}/update', [InvoiceController::class, 'updatePayment'])->name('payment.update');
 
+    Route::resource('billing', InvoiceController::class)->except(['destroy']);
+
+    Route::resource('payment', PaymentController::class)->except(['destroy']);
 
 });
 

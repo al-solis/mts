@@ -95,8 +95,12 @@
             @endforeach
         </div>
 
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 pt-1">
+        @if (session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" data-success="true">
+                {{ session('error') }}
+            </div>
+        @elseif ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" data-success="true">
                 <ul>
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -104,17 +108,18 @@
                 </ul>
             </div>
         @elseif (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 pt-1"
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"
                 data-success="true">
                 {{ session('success') }}
             </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Clear form fields after successful submission
-                    clearModalFields();
-                });
-            </script>
         @endif
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Clear form fields after successful submission
+                clearModalFields();
+            });
+        </script>
 
         {{-- Filters --}}
         <form action="" method="GET">
@@ -126,13 +131,13 @@
                 </div>
 
                 <div class="md:w-2/3 w-full">
-                    <select id="searchloc" name="searchloc"
+                    <select id="searchCompany" name="searchCompany"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
                         onchange="this.form.submit()">
                         <option value="" selected>All Companies</option>
                         @foreach ($companies as $company)
                             <option value="{{ $company->id }}"
-                                {{ request('searchloc') == $company->id ? 'selected' : '' }}>
+                                {{ request('searchCompany') == $company->id ? 'selected' : '' }}>
                                 {{ $company->name }}</option>
                         @endforeach
                     </select>
@@ -145,7 +150,7 @@
                         <option value="">All Status</option>
                         <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
                         <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
-                        <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Cancelled</option>
+                        <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Voided</option>
                     </select>
                 </div>
             </div>
@@ -168,6 +173,13 @@
                 <button class="inline-block p-4 border-b-2 rounded-t-lg" id="invoices-tab" data-tabs-target="#invoices"
                     type="button" role="tab" aria-controls="invoices" aria-selected="false">
                     Invoices
+                </button>
+            </li>
+
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="payments-tab" data-tabs-target="#payments"
+                    type="button" role="tab" aria-controls="payments" aria-selected="false">
+                    Payments
                 </button>
             </li>
 
@@ -285,6 +297,9 @@
                                         @elseif($invoice->status == 2)
                                             <span
                                                 class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Paid</span>
+                                        @elseif($invoice->status == 3)
+                                            <span
+                                                class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Voided</span>
                                         @else
                                             <span
                                                 class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Unpaid</span>
@@ -320,31 +335,154 @@
                                             </svg>
                                         </button>
 
-                                        <button type="button" title="Pay invoice : {{ $invoice->invoice_number }}"
-                                            data-modal-target="payment-modal" data-modal-toggle="payment-modal"
-                                            data-id="{{ $invoice->id }}"
-                                            data-invoice_number="{{ $invoice->invoice_number }}"
-                                            data-invoice_date="{{ $invoice->invoice_date }}"
-                                            data-company_name="{{ $invoice->company->name }}"
-                                            data-amount="{{ $invoice->amount }}" data-payment="{{ $invoice->payment }}"
-                                            data-payment_method="{{ $invoice->payment_method }}"
-                                            data-balance="{{ $invoice->amount - $invoice->payment }}"
-                                            onclick="payInvoice(this)"
-                                            class="group flex space-x-1 text-gray-500 hover:text-green-600 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
-                                                <path
-                                                    d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z" />
-                                                <path
-                                                    d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
-                                            </svg>
-                                        </button>
+                                        @if ($invoice->status != 2 && $invoice->status != 3)
+                                            <button type="button" title="Pay invoice : {{ $invoice->invoice_number }}"
+                                                data-modal-target="payment-modal" data-modal-toggle="payment-modal"
+                                                data-id="{{ $invoice->id }}"
+                                                data-invoice_number="{{ $invoice->invoice_number }}"
+                                                data-invoice_date="{{ $invoice->invoice_date }}"
+                                                data-company_name="{{ $invoice->company->name }}"
+                                                data-amount="{{ $invoice->amount }}"
+                                                data-payment="{{ $invoice->payment }}"
+                                                data-payment_method="{{ $invoice->payment_method }}"
+                                                data-balance="{{ $invoice->amount - $invoice->payment }}"
+                                                onclick="payInvoice(this)"
+                                                class="group flex space-x-1 text-gray-500 hover:text-green-600 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z" />
+                                                    <path
+                                                        d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+                                                </svg>
+                                            </button>
+
+                                            <button type="button" title="Void invoice : {{ $invoice->invoice_number }}"
+                                                data-id="{{ $invoice->id }}"
+                                                data-invoice_number="{{ $invoice->invoice_number }}"
+                                                data-status="{{ $invoice->status }}" onclick="cancelInvoice(this)"
+                                                class="group flex space-x-1 text-gray-500 hover:text-red-600 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+                                                </svg>
+                                            </button>
+                                        @endif
+
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-6 text-gray-500">
+                                    <td colspan="10" class="text-center py-6 text-gray-500">
                                         No invoices found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- ===================== -->
+            <!-- Payments Tab -->
+            <!-- ===================== -->
+            <div class="hidden p-6" id="payments" role="tabpanel">
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-6 py-3">Date</th>
+                                <th class="px-6 py-3">Receipt #</th>
+                                <th class="px-6 py-3">Invoice #</th>
+                                <th class="px-6 py-3">Company</th>
+                                <th class="px-6 py-3">Reference #</th>
+                                <th class="px-6 py-3">Notes</th>
+                                <th class="px-6 py-3">Amount</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            @forelse($payments ?? [] as $payment)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 font-medium">
+                                        {{ $payment->payment_date }}
+                                    </td>
+                                    <td class="px-6 py-4 font-medium">
+                                        {{ $payment->payment_number }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $payment->invoice->invoice_number }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $payment->invoice->company->name }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $payment->invoice->reference }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ Str::limit($payment->notes, 50) }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        ₱{{ number_format($payment->amount, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if ($payment->status == 1)
+                                            <span
+                                                class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Active</span>
+                                        @else
+                                            <span
+                                                class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Voided</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 flex items-center justify-center space-x-2">
+                                        <button type="button" title="Edit payment : {{ $payment->payment_number }}"
+                                            data-modal-target="edit-payment-modal" data-modal-toggle="edit-payment-modal"
+                                            data-id="{{ $payment->id }}"
+                                            data-company_id="{{ $payment->invoice->company_id }}"
+                                            data-company_name="{{ $payment->invoice->company->name }}"
+                                            data-payment_number="{{ $payment->payment_number }}"
+                                            data-payment_date="{{ $payment->payment_date }}"
+                                            data-payment_reference="{{ $payment->reference }}"
+                                            data-notes="{{ $payment->notes }}" data-amount="{{ $payment->amount }}"
+                                            data-payment_method="{{ $payment->payment_method }}"
+                                            data-invoice_number="{{ $payment->invoice->invoice_number }}"
+                                            data-invoice_amount="{{ $payment->invoice->amount }}"
+                                            data-invoice_total_payment="{{ $payment->invoice->total_payment }}"
+                                            data-status="{{ $payment->status }}" onclick="editPayment(this)"
+                                            class="group flex space-x-1 text-gray-500 hover:text-blue-600 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                <path
+                                                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                <path fill-rule="evenodd"
+                                                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                            </svg>
+                                        </button>
+
+                                        @if ($payment->status != 2)
+                                            <button type="button" title="Void payment : {{ $payment->payment_number }}"
+                                                data-id="{{ $payment->id }}"
+                                                data-payment_number="{{ $payment->payment_number }}"
+                                                data-status="{{ $payment->status }}" onclick="cancelPayment(this)"
+                                                class="group flex space-x-1 text-gray-500 hover:text-red-600 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+                                                </svg>
+                                            </button>
+                                        @endif
+
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center py-6 text-gray-500">
+                                        No payments found.
                                     </td>
                                 </tr>
                             @endforelse
@@ -620,11 +758,12 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"
+                                <button type="submit" name="btn-update" id="btn-update"
                                     class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
                                     {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
                                     Update Invoice
                                 </button>
+
                             </form>
                         </div>
                     </div>
@@ -742,7 +881,7 @@
                                             Notes</label>
                                         <textarea type="text" name="pay_notes" id="pay_notes"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                            placeholder="e.g. Partial payment, etc." required></textarea>
+                                            placeholder="e.g. Partial payment, etc."></textarea>
                                     </div>
                                 </div>
 
@@ -757,6 +896,134 @@
                 </div>
             </div>
             <!-- End payment modal -->
+
+            <!-- Edit Payment modal -->
+            <div id="edit-payment-modal" tabindex="-1" aria-hidden="true"
+                class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div class="relative p-2 w-full max-w-md max-h-full">
+                    <!-- Modal content -->
+                    <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                        <!-- Modal header -->
+                        <div
+                            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Update Payment
+                            </h3>
+                            <button type="button"
+                                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                data-modal-toggle="edit-payment-modal">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                </svg>
+                                <span class="sr-only">Close</span>
+                            </button>
+                        </div>
+                        <!-- Modal body -->
+                        <div class="overflow-y-auto max-h-[70vh]">
+                            <form id="editPaymentForm" class="p-4 md:p-5" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="edit_id" id="edit_id">
+                                <div class="grid ml-1 mr-1 gap-2 mb-2 sm:grid-cols-2">
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Invoice #:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="edit_pay_invoice_number" name="edit_pay_invoice_number"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Company:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="edit_pay_company_name" name="edit_pay_company_name"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Total Amount:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-gray-900 dark:text-white"
+                                        id="edit_pay_total_amount" name="edit_pay_total_amount"></div>
+
+                                    <div class="block text-xs font-medium text-gray-900 dark:text-white">
+                                        Already Paid:
+                                    </div>
+                                    <div class="block text-xs font-semibold text-right text-green-900 dark:text-white"
+                                        id="edit_pay_already_paid" name="edit_pay_already_paid"></div>
+
+                                    <div class="mt-2 block text-xs font-semibold border-t text-gray-900 dark:text-white">
+                                        Outstanding Balance:
+                                    </div>
+                                    <div class="mt-2 block text-xs font-semibold text-right border-t text-red-900 dark:text-white"
+                                        id="edit_pay_outstanding_balance" name="edit_pay_outstanding_balance"></div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="edit_pay_amount"
+                                            class="mt-2 block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Amount*</label>
+                                        <input type="number" name="edit_pay_amount" id="edit_pay_amount" min="0"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="1000" required>
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-1">
+                                        <label for="edit_pay_date"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Date*</label>
+                                        <input type="date" name="edit_pay_date" id="edit_pay_date"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="mm/dd/yyyy" required>
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-1">
+                                        <label for="edit_pay_payment_method"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Method*</label>
+                                        <select name="edit_pay_payment_method" id="edit_pay_payment_method"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="1000" required>
+                                            <option value="1">Bank Transfer</option>
+                                            <option value="2">Credit Card</option>
+                                            <option value="3">Cash</option>
+                                            <option value="4">Check</option>
+                                            <option value="5">Online Payment</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="edit_pay_reference"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Reference*</label>
+                                        <input type="text" name="edit_pay_reference" id="edit_pay_reference"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="e.g. Check no./ bank transfer reference">
+                                        </input>
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label for="edit_pay_notes"
+                                            class="block text-xs font-medium text-gray-900 dark:text-white">Payment
+                                            Notes</label>
+                                        <textarea type="text" name="edit_pay_notes" id="edit_pay_notes"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
+                                            placeholder="e.g. Partial payment, etc."></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit" name="btn-payment-update" id="btn-payment-update"
+                                    class="mt-2 text-white inline-flex items-center bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-md text-xs px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                                    {{-- <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg> --}}
+                                    Update Payment
+                                </button>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End edit payment -->
 
             <script>
                 function clearModalFields() {
@@ -787,9 +1054,51 @@
                     document.getElementById('edit_payment_method').value = button.getAttribute('data-payment_method');
 
 
+                    const status = parseInt(button.getAttribute('data-status'));
+                    const btn = document.getElementById('btn-update');
+
+                    if (status === 3) {
+                        btn.setAttribute('hidden', true);
+                        document.getElementById('edit_invoice_number').style.color = 'red';
+                    } else {
+                        btn.removeAttribute('hidden');
+                        document.getElementById('edit_invoice_number').style.color = '';
+                    }
+
+
                     // Set form action
                     const form = document.getElementById('editForm');
                     form.action = `/billing/${id}`;
+                }
+
+                function cancelInvoice(button) {
+                    const id = button.getAttribute('data-id');
+                    const invoiceNumber = button.getAttribute('data-invoice_number');
+                    const status = button.getAttribute('data-status');
+                    if (confirm(`Are you sure you want to cancel invoice #${invoiceNumber}? This action cannot be undone.`)) {
+
+                        if (status != 0) {
+                            alert(
+                                'Only unpaid invoices can be cancelled. Please void the payment(s) associated with this invoice first before cancelling.'
+                            );
+                            return;
+                        }
+
+                        // Create a form to submit the cancellation request
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/billing/${id}/void`;
+
+                        // CSRF token
+                        const csrf = document.createElement('input');
+                        csrf.type = 'hidden';
+                        csrf.name = '_token';
+                        csrf.value = '{{ csrf_token() }}';
+
+                        form.appendChild(csrf);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
                 }
 
                 function payInvoice(button) {
@@ -820,6 +1129,92 @@
                     // Set form action
                     const form = document.getElementById('paymentForm');
                     form.action = `/billing/${id}/pay`;
+                }
+
+                function editPayment(button) {
+
+                    const id = button.getAttribute('data-id');
+
+                    let totalPayment =
+                        parseFloat(button.getAttribute('data-invoice_total_payment')) -
+                        parseFloat(button.getAttribute('data-amount')) || 0;
+
+                    const invoiceAmount =
+                        parseFloat(button.getAttribute('data-invoice_amount'));
+
+                    const balance = invoiceAmount - totalPayment;
+
+                    document.getElementById('edit_id').value = id;
+
+                    document.getElementById('edit_pay_invoice_number').textContent =
+                        button.getAttribute('data-invoice_number');
+
+                    document.getElementById('edit_pay_company_name').textContent =
+                        button.getAttribute('data-company_name');
+
+                    document.getElementById('edit_pay_total_amount').textContent =
+                        invoiceAmount.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'PHP'
+                        });
+
+                    document.getElementById('edit_pay_already_paid').textContent =
+                        totalPayment.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'PHP'
+                        });
+
+                    document.getElementById('edit_pay_outstanding_balance').textContent =
+                        balance.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'PHP'
+                        });
+
+                    document.getElementById('edit_pay_amount').setAttribute('max', balance);
+                    document.getElementById('edit_pay_amount').value =
+                        button.getAttribute('data-amount');
+                    document.getElementById('edit_pay_reference').value =
+                        button.getAttribute('data-payment_reference');
+                    document.getElementById('edit_pay_notes').value =
+                        button.getAttribute('data-notes');
+                    document.getElementById('edit_pay_payment_method').value =
+                        button.getAttribute('data-payment_method');
+                    document.getElementById('edit_pay_date').value =
+                        button.getAttribute('data-payment_date');
+
+                    status = parseInt(button.getAttribute('data-status'));
+                    const btn = document.getElementById('btn-payment-update');
+                    if (status == 2) {
+                        btn.setAttribute('hidden', true);
+                    } else {
+                        btn.removeAttribute('hidden');
+                    }
+
+                    const form = document.getElementById('editPaymentForm');
+                    form.action = `/payment/${id}/update`;
+                }
+
+                function cancelPayment(button) {
+                    const id = button.getAttribute('data-id');
+                    const paymentNumber = button.getAttribute('data-payment_number');
+                    const status = button.getAttribute('data-status');
+                    if (confirm(`Are you sure you want to cancel payment #${paymentNumber}? This action cannot be undone.`)) {
+
+                        // Create a form to submit the cancellation request
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/payment/${id}/void`;
+
+                        // CSRF token
+                        const csrf = document.createElement('input');
+                        csrf.type = 'hidden';
+                        csrf.name = '_token';
+                        csrf.value = '{{ csrf_token() }}';
+
+                        form.appendChild(csrf);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
                 }
             </script>
         @endsection
