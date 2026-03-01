@@ -14,6 +14,7 @@ use App\Models\Resume;
 use App\Models\JobPosting;
 use App\Models\setting;
 use App\Models\appointment;
+use App\Models\Company;
 
 
 class ResumeController extends Controller
@@ -270,6 +271,98 @@ class ResumeController extends Controller
         }
 
         return $data;
+    }
+
+    function getIndustrySkills($industry)
+    {
+        $industrySkills = [
+
+            'Information Technology' => [
+                'php',
+                'javascript',
+                'python',
+                'java',
+                'sql',
+                'html',
+                'css',
+                'laravel',
+                'react',
+                'vue',
+                'nodejs',
+                'mysql',
+                'api',
+                'git'
+            ],
+
+            'Healthcare' => [
+                'patient care',
+                'medical terminology',
+                'ehr',
+                'clinical documentation',
+                'vital signs',
+                'infection control',
+                'pharmacology'
+            ],
+
+            'Finance' => [
+                'accounting',
+                'financial analysis',
+                'bookkeeping',
+                'taxation',
+                'audit',
+                'excel',
+                'quickbooks',
+                'budgeting',
+                'forecasting'
+            ],
+
+            'Manufacturing' => [
+                'quality control',
+                'production planning',
+                'lean manufacturing',
+                'supply chain',
+                'inventory management',
+                'maintenance'
+            ],
+
+            'Education' => [
+                'curriculum development',
+                'lesson planning',
+                'classroom management',
+                'student assessment',
+                'e-learning',
+                'research'
+            ],
+
+            'Construction' => [
+                'project management',
+                'autocad',
+                'cost estimation',
+                'site supervision',
+                'blueprint reading',
+                'safety compliance'
+            ],
+
+            'Retail' => [
+                'sales',
+                'inventory control',
+                'customer service',
+                'merchandising',
+                'pos systems',
+                'cash handling'
+            ],
+
+            'BPO' => [
+                'customer support',
+                'call handling',
+                'crm',
+                'technical support',
+                'email support',
+                'data entry'
+            ]
+        ];
+
+        return $industrySkills[$industry] ?? [];
     }
 
     private function calculateMatch($data, $job, $settings)

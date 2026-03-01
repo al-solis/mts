@@ -10,6 +10,9 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DeploymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\MainController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -58,6 +61,15 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('payment', PaymentController::class)->except(['destroy']);
 
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+    Route::get('/reports/invoice', [ReportController::class, 'generateInvoiceReport'])->name('reports.invoices');
+    Route::get('/reports/payment', [ReportController::class, 'generatePaymentReport'])->name('reports.payments');
+
+    Route::get('/metrics', [MetricsController::class, 'index'])->name('metrics.index');
+    Route::get('/metrics/data', [MetricsController::class, 'data'])->name('metrics.data');
+
+    Route::get('/main', [MainController::class, 'index'])->name('main');
 });
 
 require __DIR__ . '/auth.php';

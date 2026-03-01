@@ -12,18 +12,17 @@
 
         <div class="py-0.5">
             <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                <a href="{{ route('dashboard') }}"
+                {{-- <a href="{{ route('dashboard') }}"
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-blue-700 rounded-lg focus:outline-hidden focus:blue-cyan-700">
-                    {{-- <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg> --}}
                     <i class="bi bi-house"></i>
                     Home
-                </a>
-                <a href=""
+                </a> --}}
+                <a href="{{ route('main') }}"
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
                     <i class="bi bi-speedometer"></i>
                     Dashboard
                 </a>
-                <a href=""
+                <a href="{{ route('metrics.index') }}"
                     class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700">
                     <i class="bi bi-bar-chart-fill"></i>
                     Metrics
@@ -63,7 +62,7 @@
                     Billing
                 </a>
                 <a class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-sm text-gray-800 bg-gray-100 hover:text-cyan-700 rounded-lg focus:outline-hidden focus:text-cyan-700"
-                    href="#">
+                    href="{{ route('reports.index') }}">
                     <i class="bi bi-bar-chart"></i>
                     Reports
                 </a>

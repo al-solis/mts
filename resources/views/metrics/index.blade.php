@@ -1,0 +1,252 @@
+@extends('dashboard')
+@section('content')
+    <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
+    {{-- <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-2">
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Reports</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Select a report to generate</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4 ml-2 mr-2 mb-4">
+        <div class="grid grid-cols-2 gap-4">
+            <input type="date" id="start_date"
+                class="form-input  bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500">
+            <input type="date" id="end_date"
+                class="form-input  bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500">
+        </div>
+    </div> --}}
+
+    <div class="p-6 space-y-6">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-800">Metrics Dashboard</h1>
+                <p class="text-sm text-gray-500">Deployment & Recruitment Analytics</p>
+            </div>
+
+            {{-- Date Range --}}
+            <div class="flex gap-3">
+                <input type="date" id="start_date"
+                    class="border rounded-lg px-3 py-2 text-sm shadow-sm focus:ring focus:ring-blue-200">
+                <input type="date" id="end_date"
+                    class="border rounded-lg px-3 py-2 text-sm shadow-sm focus:ring focus:ring-blue-200">
+            </div>
+        </div>
+
+        {{-- ================= SUMMARY CARDS ================= --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Total Deployments</p>
+                <h2 id="totalDeployments" class="text-2xl font-bold text-blue-600">0</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Companies Served</p>
+                <h2 id="companiesServed" class="text-2xl font-bold text-indigo-600">0</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Conversion Rate</p>
+                <h2 id="conversionRate" class="text-2xl font-bold text-green-600">0%</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Avg Time to Deploy</p>
+                <h2 id="avgTimeToDeploy" class="text-2xl font-bold text-yellow-600">0 days</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Total Applicants</p>
+                <h2 id="totalApplicants" class="text-2xl font-bold text-purple-600">0</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">Interviews Scheduled</p>
+                <h2 id="totalInterviews" class="text-2xl font-bold text-pink-600">0</h2>
+            </div>
+
+        </div>
+
+        {{-- ================= CHART SECTION ================= --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {{-- Deployments Over Time --}}
+            <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
+                <h3 class="text-lg font-semibold mb-4">Deployments Over Time</h3>
+                <canvas id="dailyChart" class="w-full h-full"></canvas>
+            </div>
+
+            {{-- Top Companies --}}
+            <div class="bg-white rounded-xl shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Top Companies by Deployments</h3>
+                <canvas id="companyChart" class="w-full h-full"></canvas>
+            </div>
+
+            {{-- Industry Distribution --}}
+            <div class="bg-white rounded-xl shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Deployments by Industry</h3>
+                <canvas id="industryChart" class="w-full h-full"></canvas>
+            </div>
+
+            {{-- Monthly Trends --}}
+            <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
+                <h3 class="text-lg font-semibold mb-4">Monthly Deployment Trends</h3>
+                <canvas id="monthlyChart" class="w-full h-full"></canvas>
+            </div>
+
+        </div>
+
+        {{-- ================= TOP PERFORMERS ================= --}}
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Top Performing Companies</h3>
+            <div id="topPerformers" class="divide-y"></div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                .toISOString().split('T')[0];
+
+            document.getElementById('start_date').value = firstDay;
+            document.getElementById('end_date').value = today;
+        });
+
+        let lineChart, barChart, pieChart, monthlyChart;
+
+        function loadMetrics() {
+
+            const start = document.getElementById('start_date').value;
+            const end = document.getElementById('end_date').value;
+
+            fetch(`/metrics/data?start_date=${start}&end_date=${end}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    const s = data.summary;
+
+                    // =============================
+                    // UPDATE CARDS
+                    // =============================
+                    document.getElementById('totalDeployments').innerText = s.totalDeployments;
+                    document.getElementById('companiesServed').innerText = s.uniqueCompanies;
+                    document.getElementById('conversionRate').innerText = s.conversionRate + '%';
+                    document.getElementById('avgTimeToDeploy').innerText = s.avgTimeToDeploy + ' days';
+                    document.getElementById('totalApplicants').innerText = s.totalApplicants;
+                    document.getElementById('totalInterviews').innerText = s.totalInterviews;
+
+                    // =============================
+                    // DAILY LINE CHART
+                    // =============================
+                    if (lineChart) lineChart.destroy();
+
+                    lineChart = new Chart(document.getElementById('dailyChart'), {
+                        type: 'line',
+                        data: {
+                            labels: data.dailyDeployments.map(i => i.date),
+                            datasets: [{
+                                label: 'Daily Deployments',
+                                data: data.dailyDeployments.map(i => i.total),
+                                borderColor: '#3b82f6',
+                                fill: false
+                            }]
+                        }
+                    });
+
+                    // =============================
+                    // TOP COMPANIES BAR
+                    // =============================
+                    if (barChart) barChart.destroy();
+
+                    barChart = new Chart(document.getElementById('companyChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.topCompanies.map(c => c.name),
+                            datasets: [{
+                                label: 'Deployments',
+                                data: data.topCompanies.map(c => c.deployments_count),
+                                backgroundColor: '#10b981'
+                            }]
+                        }
+                    });
+
+                    // =============================
+                    // INDUSTRY PIE
+                    // =============================
+                    if (pieChart) pieChart.destroy();
+
+                    pieChart = new Chart(document.getElementById('industryChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(data.industryData),
+                            datasets: [{
+                                data: Object.values(data.industryData),
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true, // fills the div height
+                            plugins: {
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+
+                    // =============================
+                    // MONTHLY BAR
+                    // =============================
+                    if (monthlyChart) monthlyChart.destroy();
+
+                    monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.monthlyDeployments.map(m => {
+                                const date = new Date(m.year, m.month - 1);
+                                return date.toLocaleString('default', {
+                                    month: 'short',
+                                    year: 'numeric'
+                                });
+                            }),
+                            datasets: [{
+                                label: 'Deployments',
+                                data: data.monthlyDeployments.map(m => m.total),
+                                backgroundColor: '#14b8a6'
+                            }]
+                        }
+                    });
+
+                    // =============================
+                    // TOP PERFORMERS LIST
+                    // =============================
+                    let performerHtml = '';
+                    data.topPerformers.forEach((c, index) => {
+                        performerHtml += `
+                    <div class="flex justify-between p-2 border-b">
+                        <div>
+                            <strong>${index+1}. ${c.name}</strong>
+                            <div class="text-sm">${c.deployments} deployed / ${c.applicants} applicants</div>
+                        </div>
+                        <div class="font-bold">${c.success}% success</div>
+                    </div>
+                `;
+                    });
+
+                    document.getElementById('topPerformers').innerHTML = performerHtml;
+                });
+        }
+
+        document.getElementById('start_date').addEventListener('change', loadMetrics);
+        document.getElementById('end_date').addEventListener('change', loadMetrics);
+
+        loadMetrics();
+    </script>
+@endsection

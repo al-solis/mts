@@ -24,6 +24,11 @@ class invoice extends Model
         'updated_by'
     ];
 
+    protected $casts = [
+        'invoice_date' => 'date',
+        'due_date' => 'date',
+    ];
+
     public function company()
     {
         return $this->belongsTo(Company::class);
