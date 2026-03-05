@@ -125,4 +125,6 @@ return [
 
     'pagination' => env('APP_PAGINATION_PER_PAGE', 15),
 
+    'version' => env('APP_VERSION', '1.0.0'),
+
 ];

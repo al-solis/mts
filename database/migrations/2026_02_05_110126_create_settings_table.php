@@ -14,6 +14,9 @@ return new class extends Migration {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
             $table->decimal('education')->default(30);
+            $table->decimal('education_degree_weight')->default(40)->after('education');
+            $table->decimal('education_field_weight')->default(40)->after('education_degree_weight');
+            $table->decimal('education_honors_weight')->default(20)->after('education_field_weight');
             $table->decimal('years_of_experience')->default(25);
             $table->decimal('work_experience_relevance')->default(25);
             $table->decimal('skills')->default(0);
@@ -58,5 +61,6 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('settings');
+
     }
 };

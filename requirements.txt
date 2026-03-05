@@ -18,6 +18,8 @@ composer require smalot/pdfparser:^2.0
 composer require spatie/pdf-to-image:^2.4
 composer require thiagoalessio/tesseract_ocr:^2.12
 
+composer require php-ai/php-ml
+
 # In php.ini
 extension=zip
 upload_max_filesize = 50M

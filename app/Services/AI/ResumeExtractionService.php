@@ -28,7 +28,8 @@ class ResumeExtractionService
         - responsibilities (array of strings)
         - technologies (array of strings, extracted from responsibilities))
         5. skills (array of objects, each containing:
-        - category (string, e.g., "Programming Languages", "Frameworks", "Databases", "Tools")
+        - category (string, e.g., "Programming Languages", "Frameworks", "Databases", "Tools", "Project Management", 
+        "Planning", "Customer Relations", "Bookkeeping", "Logistics")
         - items (array of strings, specific skills))
         6. certifications (array of strings)
         7. years_experience (float, total years from all work_history entries)

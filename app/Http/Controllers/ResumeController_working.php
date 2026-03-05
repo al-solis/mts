@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Phpml\FeatureExtraction\TokenCountVectorizer;
+use Phpml\FeatureExtraction\TfIdfTransformer;
+use Phpml\Tokenization\WhitespaceTokenizer;
+use Phpml\Math\Distance\Cosine;
 use App\Models\Resume;
 use App\Models\JobPosting;
 use App\Models\setting;
@@ -367,7 +371,7 @@ class ResumeController extends Controller
     private function calculateMatch($data, $job, $settings)
     {
         // Calculate each component with their respective weights
-        $educationScore = $this->matchEducation($data['education'] ?? [], $job->qualification, $settings);
+        $educationScore = $this->matchEducation($data['education'] ?? [], $job->qualification);
         $experienceScore = $this->matchExperience($data['years_experience'] ?? 0, $job);
         $relevanceScore = $this->matchWorkExperienceRelevance($data['work_history'] ?? [], $job);
         $generalScore = $this->matchGeneralQualifications($data, $job);
@@ -397,211 +401,358 @@ class ResumeController extends Controller
         ];
     }
 
-    private function matchEducation($resumeEducation, $jobQualification, $settings = null): float
+    private function matchEducation($resumeEducation, $jobQualification): float
     {
-        // If settings not provided, get from database or use defaults
-        if (!$settings) {
-            $settings = Setting::first();
-        }
-
-        $degreeWeight = $settings->education_degree_weight ?? 40;
-        $fieldWeight = $settings->education_field_weight ?? 40;
-        $honorsWeight = $settings->education_honors_weight ?? 20;
-
         // Parse job qualification for education requirements
         $jobQualification = strtolower($jobQualification);
 
-        // Define degree levels and their scores
-        $degreeLevels = [
+        // Check for degree requirements
+        $degreeKeywords = [
             'phd' => 100,
             'doctorate' => 100,
-            'master' => 90,
-            'masters' => 90,
-            'mba' => 90,
-            'bachelor' => 80,
-            'bachelors' => 80,
-            'bs' => 80,
-            'ba' => 80,
-            'associate' => 70,
-            'diploma' => 60,
-            'certificate' => 50,
-            'high school' => 40,
-            'secondary' => 40,
-            'primary' => 20,
-            'elementary' => 20,
+            'master' => 80,
+            'masters' => 80,
+            'bachelor' => 60,
+            'bachelors' => 60,
+            'bs' => 60,
+            'ba' => 60,
+            'associate' => 40,
+            'diploma' => 30,
+            'high school' => 20,
+            'secondary' => 20,
+            'primary' => 10,
+            'elementary' => 10,
             'none' => 0,
         ];
 
-        // Define field categories and their related keywords
-        $fieldCategories = [
-            'computer science' => ['computer science', 'cs', 'software', 'programming', 'development', 'coding'],
-            'information technology' => ['information technology', 'it', 'information systems', 'networking'],
-            'engineering' => ['engineering', 'engineer', 'mechanical', 'electrical', 'civil', 'chemical'],
-            'business' => ['business', 'administration', 'management', 'commerce', 'finance', 'marketing'],
-            'science' => ['science', 'scientific', 'biology', 'chemistry', 'physics', 'mathematics'],
-            'healthcare' => ['healthcare', 'medical', 'nursing', 'medicine', 'health', 'clinical'],
-            'arts' => ['arts', 'humanities', 'design', 'creative', 'graphic'],
-        ];
-
-        // Academic honors keywords with scores
-        $honorsKeywords = [
-            'cum laude' => 90,
-            'magna cum laude' => 95,
-            'summa cum laude' => 100,
-            'with honors' => 85,
-            'with distinction' => 85,
-            'with high honors' => 90,
-            'with highest honors' => 100,
-            'valedictorian' => 100,
-            'salutatorian' => 95,
-            'dean\'s list' => 80,
-            'honor roll' => 75,
-            'scholarship' => 70,
-            'award' => 65,
-            'excellence' => 70,
+        // Check for field requirements
+        $fieldKeywords = [
+            'computer science' => ['cs', 'computer', 'software', 'programming'],
+            'information technology' => ['it', 'information', 'technology'],
+            'engineering' => ['engineering', 'engineer'],
+            'business' => ['business', 'administration', 'management'],
+            'science' => ['science', 'scientific'],
         ];
 
         $bestMatch = 0;
 
         foreach ($resumeEducation as $edu) {
             $eduText = strtolower(($edu['degree'] ?? '') . ' ' . ($edu['field'] ?? ''));
-            $eduHonors = strtolower($edu['honors'] ?? $edu['awards'] ?? '');
+            $score = 0;
 
-            // 1. Degree Level Matching (40% of education score by default)
-            $degreeScore = 0;
-            $highestDegreeLevel = 0;
-
-            foreach ($degreeLevels as $keyword => $points) {
+            // Degree level matching (40% weight)
+            foreach ($degreeKeywords as $keyword => $points) {
                 if (strpos($eduText, $keyword) !== false) {
-                    $highestDegreeLevel = max($highestDegreeLevel, $points);
+                    $score += $points * 0.4;
+                    break;
                 }
             }
 
-            // Check job requirement for minimum degree level
-            $requiredDegreeLevel = $this->getRequiredDegreeLevel($jobQualification);
-            if ($requiredDegreeLevel > 0) {
-                if ($highestDegreeLevel >= $requiredDegreeLevel) {
-                    $degreeScore = 100;
-                } else {
-                    $degreeScore = ($highestDegreeLevel / $requiredDegreeLevel) * 100;
-                }
-            } else {
-                $degreeScore = $highestDegreeLevel;
-            }
-
-            // 2. Field of Study Matching (40% of education score by default)
-            $fieldScore = 0;
-            $jobField = $this->detectJobField($jobQualification, $fieldCategories);
-
-            if ($jobField) {
-                $fieldKeywords = $fieldCategories[$jobField] ?? [];
-                foreach ($fieldKeywords as $keyword) {
-                    if (strpos($eduText, $keyword) !== false) {
-                        $fieldScore = 100;
-                        break;
-                    }
-                }
-
-                // If no direct match, check for partial matches
-                if ($fieldScore == 0) {
-                    $eduField = $this->detectJobField($eduText, $fieldCategories);
-                    if ($eduField == $jobField) {
-                        $fieldScore = 80; // Same category but not exact keyword match
-                    }
-                }
-            } else {
-                // If job doesn't specify a field, do keyword matching
-                $words = array_filter(
-                    preg_split('/\s+/', $jobQualification),
-                    function ($word) {
-                        return strlen($word) > 3;
-                    }
-                );
-
-                $matches = 0;
-                foreach ($words as $word) {
-                    if (strpos($eduText, $word) !== false) {
-                        $matches++;
-                    }
-                }
-
-                $fieldScore = $words ? ($matches / count($words)) * 100 : 50; // Default 50% if no clear field
-            }
-
-            // 3. Academic Honors Matching (20% of education score by default)
-            $honorsScore = 0;
-
-            // Check for honors in education entry
-            foreach ($honorsKeywords as $keyword => $points) {
-                if (strpos($eduHonors, $keyword) !== false) {
-                    $honorsScore = max($honorsScore, $points);
-                }
-            }
-
-            // Also check in the main education text for honors mentions
-            if ($honorsScore == 0) {
-                foreach ($honorsKeywords as $keyword => $points) {
-                    if (strpos($eduText, $keyword) !== false) {
-                        $honorsScore = max($honorsScore, $points * 0.8); // Slightly lower if not in honors field
+            // Field of study matching (60% weight)
+            foreach ($fieldKeywords as $mainField => $synonyms) {
+                if (strpos($jobQualification, $mainField) !== false) {
+                    // Job requires this field
+                    foreach ($synonyms as $synonym) {
+                        if (strpos($eduText, $synonym) !== false) {
+                            $score += 100 * 0.6;
+                            break 2;
+                        }
                     }
                 }
             }
 
-            // Calculate weighted score for this education entry
-            $weightedScore = (
-                ($degreeScore * $degreeWeight / 100) +
-                ($fieldScore * $fieldWeight / 100) +
-                ($honorsScore * $honorsWeight / 100)
+            // Keyword matching in qualification text
+            $words = array_filter(
+                preg_split('/\s+/', $jobQualification),
+                function ($word) {
+                    return strlen($word) > 3;
+                }
             );
 
-            $bestMatch = max($bestMatch, $weightedScore);
+            $matches = 0;
+            foreach ($words as $word) {
+                if (strpos($eduText, $word) !== false) {
+                    $matches++;
+                }
+            }
+
+            $keywordScore = $words ? ($matches / count($words)) * 100 : 0;
+            $score = max($score, $keywordScore * 0.3); // 30% weight for general keyword matching
+
+            $bestMatch = max($bestMatch, $score);
         }
 
         return min($bestMatch, 100);
     }
 
-    /**
-     * Get the required degree level from job qualification
-     */
-    private function getRequiredDegreeLevel($jobQualification): int
-    {
-        $degreeLevels = [
-            'phd' => 100,
-            'doctorate' => 100,
-            'master' => 90,
-            'masters' => 90,
-            'bachelor' => 80,
-            'bachelors' => 80,
-            'associate' => 70,
-            'diploma' => 60,
-            'certificate' => 50,
-            'high school' => 40,
-        ];
+    // private function matchEducation(array $resumeEducation, string $jobQualification): float
+    // {
+    //     $jobQualification = strtolower($jobQualification);
 
-        foreach ($degreeLevels as $keyword => $level) {
-            if (strpos($jobQualification, $keyword) !== false) {
-                return $level;
-            }
-        }
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 1. Degree Ranking System (for level comparison)
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $degreeRank = [
+    //         'phd' => 5,
+    //         'doctorate' => 5,
+    //         'master' => 4,
+    //         'masters' => 4,
+    //         'bachelor' => 3,
+    //         'bachelors' => 3,
+    //         'bs' => 3,
+    //         'ba' => 3,
+    //         'associate' => 2,
+    //         'diploma' => 2,
+    //         'high school' => 1,
+    //         'secondary' => 1,
+    //         'elementary' => 0,
+    //     ];
 
-        return 0; // No specific degree requirement
-    }
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 2. Extract Required Degree Rank from Job Qualification
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $requiredRank = 0;
 
-    /**
-     * Detect the field category from text
-     */
-    private function detectJobField($text, $fieldCategories): ?string
-    {
-        foreach ($fieldCategories as $field => $keywords) {
-            foreach ($keywords as $keyword) {
-                if (strpos($text, $keyword) !== false) {
-                    return $field;
-                }
-            }
-        }
+    //     foreach ($degreeRank as $keyword => $rank) {
+    //         if (strpos($jobQualification, $keyword) !== false) {
+    //             $requiredRank = max($requiredRank, $rank);
+    //         }
+    //     }
 
-        return null;
-    }
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 3. Field Synonyms (Expandable for AI similarity)
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $fieldGroups = [
+    //         'computer science' => ['computer science', 'cs', 'software', 'programming'],
+    //         'information technology' => ['information technology', 'it', 'network', 'systems'],
+    //         'engineering' => ['engineering', 'engineer'],
+    //         'business' => ['business', 'administration', 'management'],
+    //         'science' => ['science'],
+    //     ];
+
+    //     $bestScore = 0;
+
+    //     foreach ($resumeEducation as $edu) {
+
+    //         $eduText = strtolower(($edu['degree'] ?? '') . ' ' . ($edu['field'] ?? ''));
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | A. DEGREE LEVEL MATCH (50%)
+    //         |--------------------------------------------------------------------------
+    //         */
+
+    //         $applicantRank = 0;
+
+    //         foreach ($degreeRank as $keyword => $rank) {
+    //             if (strpos($eduText, $keyword) !== false) {
+    //                 $applicantRank = max($applicantRank, $rank);
+    //             }
+    //         }
+
+    //         if ($requiredRank > 0) {
+    //             $levelRatio = min($applicantRank / $requiredRank, 1); // cap overqualification
+    //         } else {
+    //             $levelRatio = 1; // no degree required
+    //         }
+
+    //         $levelScore = $levelRatio * 50; // 50% weight
+
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | B. FIELD MATCH (40%)
+    //         |--------------------------------------------------------------------------
+    //         */
+
+    //         $fieldScore = 0;
+
+    //         foreach ($fieldGroups as $mainField => $keywords) {
+
+    //             // If job requires this field
+    //             if (strpos($jobQualification, $mainField) !== false) {
+
+    //                 foreach ($keywords as $keyword) {
+    //                     if (strpos($eduText, $keyword) !== false) {
+    //                         $fieldScore = 40; // full 40%
+    //                         break 2;
+    //                     }
+    //                 }
+
+    //                 // required but not matched
+    //                 $fieldScore = 0;
+    //                 break;
+    //             }
+    //         }
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | C. General Keyword Similarity (10%)
+    //         |--------------------------------------------------------------------------
+    //         */
+
+    //         $words = array_filter(
+    //             preg_split('/\s+/', $jobQualification),
+    //             fn($word) => strlen($word) > 4
+    //         );
+
+    //         $matches = 0;
+
+    //         foreach ($words as $word) {
+    //             if (strpos($eduText, $word) !== false) {
+    //                 $matches++;
+    //             }
+    //         }
+
+    //         $keywordScore = count($words)
+    //             ? ($matches / count($words)) * 10
+    //             : 0;
+
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Final Education Score (0–100)
+    //         |--------------------------------------------------------------------------
+    //         */
+
+    //         $totalScore = $levelScore + $fieldScore + $keywordScore;
+
+    //         $bestScore = max($bestScore, $totalScore);
+    //     }
+
+    //     return round(min($bestScore, 100), 2);
+    // }
+
+    // private function cleanText(string $text): string
+    // {
+    //     $text = strtolower($text);
+    //     $text = preg_replace('/[^a-z0-9\s]/', '', $text);
+
+    //     $stopwords = ['of', 'in', 'the', 'and', 'or', 'to', 'a', 'an', 'for', 'with', 'degree'];
+
+    //     foreach ($stopwords as $word) {
+    //         $text = str_replace(" $word ", " ", $text);
+    //     }
+
+    //     return trim($text);
+    // }
+
+    // private function nlpSimilarity(string $text1, string $text2): float
+    // {
+    //     $samples = [$text1, $text2];
+
+    //     $vectorizer = new TokenCountVectorizer(new WhitespaceTokenizer());
+    //     $vectorizer->fit($samples);
+    //     $vectorizer->transform($samples);
+
+    //     $tfidf = new TfIdfTransformer($samples);
+    //     $tfidf->transform($samples);
+
+    //     $cosine = new Cosine();
+
+    //     // In v0.10.0:
+    //     // distance = 0 (identical)
+    //     // distance = 1 (different)
+
+    //     $distance = $cosine->distance($samples[0], $samples[1]);
+
+    //     return 1 - $distance; // convert to similarity (0–1)
+    // }
+
+    // private function matchEducation(array $resumeEducation, string $jobQualification): float
+    // {
+    //     $jobQualificationClean = $this->cleanText($jobQualification);
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 1. Degree Ranking System
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $degreeRank = [
+    //         'phd' => 5,
+    //         'doctorate' => 5,
+    //         'master' => 4,
+    //         'masters' => 4,
+    //         'bachelor' => 3,
+    //         'bachelors' => 3,
+    //         'bs' => 3,
+    //         'ba' => 3,
+    //         'associate' => 2,
+    //         'diploma' => 2,
+    //         'vocational' => 1,
+    //         'high school' => 1,
+    //         'secondary' => 1,
+    //         'elementary' => 0,
+    //     ];
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 2. Extract Required Degree Rank
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $requiredRank = 0;
+
+    //     foreach ($degreeRank as $keyword => $rank) {
+    //         if (strpos(strtolower($jobQualification), $keyword) !== false) {
+    //             $requiredRank = max($requiredRank, $rank);
+    //         }
+    //     }
+
+    //     $bestScore = 0;
+
+    //     foreach ($resumeEducation as $edu) {
+
+    //         $eduText = strtolower(($edu['degree'] ?? '') . ' ' . ($edu['field'] ?? ''));
+    //         $eduClean = $this->cleanText($eduText);
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | A. DEGREE LEVEL MATCH (50%)
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $applicantRank = 0;
+
+    //         foreach ($degreeRank as $keyword => $rank) {
+    //             if (strpos($eduText, $keyword) !== false) {
+    //                 $applicantRank = max($applicantRank, $rank);
+    //             }
+    //         }
+
+    //         if ($requiredRank > 0) {
+    //             $levelRatio = min($applicantRank / $requiredRank, 1);
+    //         } else {
+    //             $levelRatio = 1;
+    //         }
+
+    //         $levelScore = $levelRatio * 50;
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | B. NLP FIELD + QUALIFICATION SIMILARITY (50%)
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $similarity = $this->nlpSimilarity($eduClean, $jobQualificationClean);
+
+    //         $nlpScore = $similarity * 50;
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Final Education Score (0–100)
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $totalScore = $levelScore + $nlpScore;
+
+    //         $bestScore = max($bestScore, $totalScore);
+    //     }
+
+    //     return round(min($bestScore, 100), 2);
+    // }
 
     private function matchExperience($yearsExperience, $job): float
     {
@@ -676,141 +827,43 @@ class ResumeController extends Controller
         return $jobCount > 0 ? ($totalRelevance / $jobCount) : 0;
     }
 
-    // private function matchGeneralQualifications($data, $job): float
-    // {
-    //     $score = 0;
-
-    //     // Skills matching (50% weight)
-    //     $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill)));
-    //     $resumeSkills = [];
-
-    //     foreach ($data['skills'] ?? [] as $skillGroup) {
-    //         foreach ($skillGroup['items'] ?? [] as $skill) {
-    //             $resumeSkills[] = strtolower(trim($skill));
-    //         }
-    //     }
-
-    //     $skillMatches = array_intersect($jobSkills, array_unique($resumeSkills));
-    //     $skillScore = $jobSkills ? (count($skillMatches) / count($jobSkills)) * 100 : 0;
-    //     $score += $skillScore * 0.5;
-
-    //     // Certifications (30% weight)
-    //     $certCount = count($data['certifications'] ?? []);
-    //     $certScore = 0;
-
-    //     if ($certCount >= 5)
-    //         $certScore = 100;
-    //     elseif ($certCount >= 3)
-    //         $certScore = 75;
-    //     elseif ($certCount >= 1)
-    //         $certScore = 50;
-
-    //     $score += $certScore * 0.3;
-
-    //     // Soft skills (20% weight)
-    //     $softSkills = $data['soft_skills'] ?? [];
-    //     $softSkillScore = count($softSkills) > 5 ? 100 : (count($softSkills) * 20);
-    //     $score += $softSkillScore * 0.2;
-
-    //     return min($score, 100);
-    // }
-
     private function matchGeneralQualifications($data, $job): float
     {
         $score = 0;
 
-        //Skills matching (50%)
+        // Skills matching (50% weight)
         $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill)));
         $resumeSkills = [];
+
         foreach ($data['skills'] ?? [] as $skillGroup) {
             foreach ($skillGroup['items'] ?? [] as $skill) {
                 $resumeSkills[] = strtolower(trim($skill));
             }
         }
+
         $skillMatches = array_intersect($jobSkills, array_unique($resumeSkills));
         $skillScore = $jobSkills ? (count($skillMatches) / count($jobSkills)) * 100 : 0;
         $score += $skillScore * 0.5;
 
-        //Certifications (30%)
+        // Certifications (30% weight)
         $certCount = count($data['certifications'] ?? []);
-        $certScore = $certCount >= 5 ? 100 : ($certCount >= 3 ? 75 : ($certCount >= 1 ? 50 : 0));
+        $certScore = 0;
+
+        if ($certCount >= 5)
+            $certScore = 100;
+        elseif ($certCount >= 3)
+            $certScore = 75;
+        elseif ($certCount >= 1)
+            $certScore = 50;
+
         $score += $certScore * 0.3;
 
-        //Soft skills (20%)
+        // Soft skills (20% weight)
         $softSkills = $data['soft_skills'] ?? [];
         $softSkillScore = count($softSkills) > 5 ? 100 : (count($softSkills) * 20);
         $score += $softSkillScore * 0.2;
 
-        //Location bonus (5% of general_percentage)
-        $matchLocationScore = 0;
-
-        $applicantAddress = $data['address'] ?? null;
-        $companyAddress = $job->company->location ?? null;
-
-        if ($applicantAddress && $companyAddress) {
-            $applicantCoords = $this->geocodeAddress($applicantAddress);
-            $companyCoords = $this->geocodeAddress($companyAddress);
-
-            if ($applicantCoords && $companyCoords) {
-                $distance = $this->haversineDistance(
-                    $applicantCoords['lat'],
-                    $applicantCoords['lng'],
-                    $companyCoords['lat'],
-                    $companyCoords['lng']
-                );
-
-                // Example scoring: <=5 km = 100, 5-20km linear drop, >50km = 0
-                if ($distance <= 5) {
-                    $matchLocationScore = 100;
-                } elseif ($distance <= 20) {
-                    $matchLocationScore = 100 * (1 - ($distance - 5) / 15); // linear scale
-                } elseif ($distance <= 50) {
-                    $matchLocationScore = 50 * (1 - ($distance - 20) / 30);
-                } else {
-                    $matchLocationScore = 0;
-                }
-            }
-        }
-
-        // Add 5% weight for location
-        $score = $score * 0.95 + ($matchLocationScore * 0.05);
-
         return min($score, 100);
-    }
-
-    private function haversineDistance($lat1, $lon1, $lat2, $lon2)
-    {
-        $earthRadius = 6371; // km
-
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-
-        $a = sin($dLat / 2) * sin($dLat / 2) +
-            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-            sin($dLon / 2) * sin($dLon / 2);
-
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c; // distance in km
-    }
-
-    private function geocodeAddress($address)
-    {
-        $address = urlencode($address);
-        $url = "https://nominatim.openstreetmap.org/search?q={$address}&format=json&limit=1";
-
-        $response = @file_get_contents($url);
-        if ($response) {
-            $data = json_decode($response, true);
-            if (!empty($data)) {
-                return [
-                    'lat' => (float) $data[0]['lat'],
-                    'lng' => (float) $data[0]['lon'],
-                ];
-            }
-        }
-
-        return null;
     }
 
     private function getPassingThreshold($job, $settings)

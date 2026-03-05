@@ -78,5 +78,15 @@
     <main>
         @yield('content')
     </main>
+    <div class="flex justify-center">
+        <footer class="w-full lg:max-w-4xl max-w-[335px] text-xs mt-6 not-has-[nav]:hidden">
+            <p class="text-center mb-2 text-[#706f6c] dark:text-[#A1A09A]">
+                All rights reserved &copy; {{ date('Y') }}. This project is maintained and developed by
+                <a href="https://sanai.ph" target="_blank"
+                    class="font-medium underline underline-offset-4 text-gray-600 dark:text-gray-400">SANAI Digital
+                    Solutions Philippines Inc.</a> v{{ config('app.version') }}
+            </p>
+        </footer>
+    </div>
 
 </x-app-layout>

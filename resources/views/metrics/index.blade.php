@@ -110,13 +110,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+
+            const date = new Date(dateString);
+            if (isNaN(date)) return '';
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
-            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                .toISOString().split('T')[0];
+            const firstDay = new Date(
+                new Date().getFullYear(),
+                new Date().getMonth(),
+                1
+            ).toISOString().split('T')[0];
 
-            document.getElementById('start_date').value = firstDay;
-            document.getElementById('end_date').value = today;
+            document.getElementById('start_date').value = formatDateForInput(firstDay);
+            document.getElementById('end_date').value = formatDateForInput(today);
         });
 
         let lineChart, barChart, pieChart, monthlyChart;

@@ -242,7 +242,7 @@
                                     class="block text-xs font-medium text-gray-900 dark:text-white">Company Name*</label>
                                 <input type="text" name="name" id="name"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. SANAI Digital Solutions Inc." required>
+                                    placeholder="e.g. SANAI Digital Solutions Philippines Inc." required>
                             </div>
                             <div class="sm:col-span-2">
                                 <label for="industry"
@@ -271,7 +271,7 @@
                                     class="block text-xs font-medium text-gray-900 dark:text-white">Location*</label>
                                 <input type="text" name="location" id="location"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Imus, Cavite" required>
+                                    placeholder="e.g. Alabang, Muntinlupa City" required>
                             </div>
 
                             <div class="md:col-span-1">
@@ -339,7 +339,7 @@
                                     class="block text-xs font-medium text-gray-900 dark:text-white">Company Name*</label>
                                 <input type="text" name="edit_name" id="edit_name"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. SANAI Digital Solutions Inc." required>
+                                    placeholder="e.g. SANAI Digital Solutions Philippines Inc." required>
                             </div>
                             <div class="sm:col-span-2">
                                 <label for="edit_industry"
@@ -368,7 +368,7 @@
                                     class="block text-xs font-medium text-gray-900 dark:text-white">Location*</label>
                                 <input type="text" name="edit_location" id="edit_location"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"
-                                    placeholder="e.g. Imus, Cavite" required>
+                                    placeholder="e.g. Alabang, Muntinlupa City" required>
                             </div>
 
                             <div class="md:col-span-1">
