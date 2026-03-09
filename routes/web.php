@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/billing/{invoice}/void', [InvoiceController::class, 'voidInvoice'])->name('billing.void');
     Route::post('/payment/{payment}/void', [InvoiceController::class, 'voidPayment']);
     Route::put('/payment/{payment}/update', [InvoiceController::class, 'updatePayment'])->name('payment.update');
+    Route::get('/api/company/{companyId}/billing-info', [InvoiceController::class, 'getBillingInfo']);
 
     Route::resource('billing', InvoiceController::class)->except(['destroy']);
 

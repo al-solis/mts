@@ -330,4 +330,29 @@ class InvoiceController extends Controller
 
         return redirect()->route('billing.index')->with('success', 'Payment updated successfully.');
     }
+
+    public function getBillingInfo($companyId)
+    {
+        $company = Company::findOrFail($companyId);
+
+        $totalBilled = Invoice::where('company_id', $companyId)->where('status', '!=', 3)->sum('amount');
+        $totalCollected = Invoice::where('company_id', $companyId)->where('status', '!=', 3)->sum('payment');
+        $outstandingBalance = $totalBilled - $totalCollected;
+        $overdueInvoices = Invoice::where('company_id', $companyId)->where('due_date', '<', now())->where('status', '!=', 2)->count();
+
+        $totalDuefromDeployments = DB::table('deployments as a')
+            ->join('resumes as b', 'a.resume_id', '=', 'b.id')
+            ->join('job_postings as c', 'b.job_posting_id', '=', 'c.id')
+            ->where('c.company_id', $companyId)
+            ->where('a.status', 1)
+            ->sum('a.agency_fee');
+
+        return response()->json([
+            'total_due_from_deployments' => $totalDuefromDeployments,
+            'total_billed' => $totalBilled,
+            'total_collected' => $totalCollected,
+            'outstanding_balance' => $outstandingBalance,
+            'overdue_invoices' => $overdueInvoices,
+        ]);
+    }
 }

@@ -280,7 +280,7 @@
                                             Failed
                                         </span>
                                     @elseif ($appt->tag == 1)
-                                        <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-green-700">
+                                        <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                                             Passed
                                         </span>
                                     @endif

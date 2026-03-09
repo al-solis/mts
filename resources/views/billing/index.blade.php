@@ -163,22 +163,37 @@
             data-tabs-toggle="#billingTabsContent" role="tablist">
 
             <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="companies-tab" data-tabs-target="#companies"
-                    type="button" role="tab" aria-controls="companies" aria-selected="true">
+                <button
+                    class="inline-block p-4 border-b-2 rounded-t-lg border-transparent text-gray-500
+                    aria-selected:bg-gray-100
+                    aria-selected:text-blue-600
+                    aria-selected:border-blue-600"
+                    id="companies-tab" data-tabs-target="#companies" type="button" role="tab" aria-controls="companies"
+                    aria-selected="true">
                     Companies
                 </button>
             </li>
 
             <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="invoices-tab" data-tabs-target="#invoices"
-                    type="button" role="tab" aria-controls="invoices" aria-selected="false">
+                <button
+                    class="inline-block p-4 border-b-2 rounded-t-lg border-transparent text-gray-500
+                    aria-selected:bg-gray-100
+                    aria-selected:text-blue-600
+                    aria-selected:border-blue-600"
+                    id="invoices-tab" data-tabs-target="#invoices" type="button" role="tab" aria-controls="invoices"
+                    aria-selected="false">
                     Invoices
                 </button>
             </li>
 
             <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="payments-tab" data-tabs-target="#payments"
-                    type="button" role="tab" aria-controls="payments" aria-selected="false">
+                <button
+                    class="inline-block p-4 border-b-2 rounded-t-lg border-transparent text-gray-500
+                    aria-selected:bg-gray-100
+                    aria-selected:text-blue-600
+                    aria-selected:border-blue-600"
+                    id="payments-tab" data-tabs-target="#payments" type="button" role="tab" aria-controls="payments"
+                    aria-selected="false">
                     Payments
                 </button>
             </li>
@@ -197,41 +212,41 @@
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-3">Company</th>
-                                <th class="px-6 py-3">Industry</th>
-                                <th class="px-6 py-3">Location</th>
-                                <th class="px-6 py-3">Active Placements</th>
-                                <th class="px-6 py-3">Billing from Deployment</th>
-                                <th class="px-6 py-3">Total Billed</th>
-                                <th class="px-6 py-3">Total Paid</th>
-                                <th class="px-6 py-3">Balance</th>
+                                <th class="px-6 py-3 w-[250px]">Company</th>
+                                <th class="px-6 py-3 w-[200px]">Industry</th>
+                                <th class="px-6 py-3 w-[200px]">Location</th>
+                                <th class="px-6 py-3 w-[50px]">Active Placements</th>
+                                <th class="px-6 py-3 w-[150px]">Provisional Billing</th>
+                                <th class="px-6 py-3 w-[120px]">Total Billed</th>
+                                <th class="px-6 py-3 w-[120px]">Total Paid</th>
+                                <th class="px-6 py-3 w-[120px]">Balance</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y">
                             @forelse($companies as $company)
                                 <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4 font-medium">
+                                    <td class="px-6 py-4 text-xs w-[250px]">
                                         {{ $company->name }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[200px]">
                                         {{ $company->industry }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[200px]">
                                         {{ $company->location }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-right text-xs w-[50px]">
                                         {{ $company->active_deployments_count ?? 0 }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-right text-xs w-[150px]">
                                         ₱{{ number_format($company->total_agency_fee ?? 0, 2) }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-right text-xs w-[120px]">
                                         ₱{{ number_format($company->total_billed ?? 0, 2) }}
                                     </td>
-                                    <td class="px-6 py-4 text-green-600">
+                                    <td class="px-6 py-4 text-right text-xs w-[120px] text-green-600">
                                         ₱{{ number_format($company->total_collected ?? 0, 2) }}
                                     </td>
-                                    <td class="px-6 py-4 text-red-600 font-medium">
+                                    <td class="px-6 py-4 text-right text-xs w-[120px] text-red-600">
                                         ₱{{ number_format($company->balance ?? 0, 2) }}
                                     </td>
                                 </tr>
@@ -248,7 +263,6 @@
 
             </div>
 
-
             <!-- ===================== -->
             <!-- Invoices Tab -->
             <!-- ===================== -->
@@ -258,39 +272,39 @@
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-3">Invoice #</th>
-                                <th class="px-6 py-3">Company</th>
-                                <th class="px-6 py-3">Description</th>
-                                <th class="px-6 py-3">Amount</th>
-                                <th class="px-6 py-3">Paid</th>
-                                <th class="px-6 py-3">Balance</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Date</th>
-                                <th class="px-6 py-3">Due Date</th>
-                                <th class="px-6 py-3">Action</th>
+                                <th class="px-6 py-3 w-[150px]">Invoice #</th>
+                                <th class="px-6 py-3 w-[250px]">Company</th>
+                                <th class="px-6 py-3 w-[200px]">Description</th>
+                                <th class="px-6 py-3 w-[120px]">Amount</th>
+                                <th class="px-6 py-3 w-[120px]">Paid</th>
+                                <th class="px-6 py-3 w-[120px]">Balance</th>
+                                <th class="px-6 py-3 w-[80px]">Status</th>
+                                <th class="px-6 py-3 w-[120px]">Date</th>
+                                <th class="px-6 py-3 w-[120px]">Due Date</th>
+                                <th class="px-6 py-3 w-[120px]">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y">
                             @forelse($invoices ?? [] as $invoice)
                                 <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4 font-medium">
+                                    <td class="px-6 py-4 text-xs w-[150px]">
                                         {{ $invoice->invoice_number }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[250px]">
                                         {{ $invoice->company->name }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[200px]">
                                         {{ Str::limit($invoice->description, 50) }}
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-right text-xs w-[120px]">
                                         ₱{{ number_format($invoice->amount, 2) }}
                                     </td>
-                                    <td class="px-6 py-4 text-green-700">
+                                    <td class="px-6 py-4 text-green-700 text-right text-xs w-[120px]">
                                         ₱{{ number_format($invoice->payment, 2) }}
                                     </td>
-                                    <td class="px-6 py-4 text-red-700">
+                                    <td class="px-6 py-4 text-red-700 text-right text-xs w-[120px]">
                                         ₱{{ number_format($invoice->amount - $invoice->payment, 2) }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 w-[80px]">
                                         @if ($invoice->status == 1)
                                             <span
                                                 class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">Partial</span>
@@ -305,13 +319,13 @@
                                                 class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Unpaid</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4">
-                                        {{ $invoice->invoice_date }}
+                                    <td class="px-6 py-4 text-xs w-[120px]">
+                                        {{ Carbon::parse($invoice->invoice_date)->format('Y-m-d') }}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        {{ $invoice->due_date }}
+                                    <td class="px-6 py-4 text-xs w-[120px]">
+                                        {{ Carbon::parse($invoice->due_date)->format('Y-m-d') }}
                                     </td>
-                                    <td class="px-6 py-4 flex items-center justify-center space-x-2">
+                                    <td class="px-6 py-4 flex text-xs items-center justify-center space-x-2">
                                         <button type="button" title="Edit invoice : {{ $invoice->invoice_number }}"
                                             data-modal-target="edit-modal" data-modal-toggle="edit-modal"
                                             data-id="{{ $invoice->id }}" data-company_id="{{ $invoice->company_id }}"
@@ -394,42 +408,42 @@
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-3">Date</th>
-                                <th class="px-6 py-3">Receipt #</th>
-                                <th class="px-6 py-3">Invoice #</th>
-                                <th class="px-6 py-3">Company</th>
-                                <th class="px-6 py-3">Reference #</th>
-                                <th class="px-6 py-3">Notes</th>
-                                <th class="px-6 py-3">Amount</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Action</th>
+                                <th class="px-6 py-3 w-[120px]">Date</th>
+                                <th class="px-6 py-3 w-[150px]">Receipt #</th>
+                                <th class="px-6 py-3 w-[150px]">Invoice #</th>
+                                <th class="px-6 py-3 w-[250px]">Company</th>
+                                <th class="px-6 py-3 w-[100px]">Ref #</th>
+                                <th class="px-6 py-3 w-[250px]">Notes</th>
+                                <th class="px-6 py-3 w-[120px]">Amount</th>
+                                <th class="px-6 py-3 w-[70px]">Status</th>
+                                <th class="px-6 py-3 w-[80px]">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y">
                             @forelse($payments ?? [] as $payment)
                                 <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4 font-medium">
+                                    <td class="px-6 py-4 text-xs w-[120px]">
                                         {{ $payment->payment_date }}
                                     </td>
-                                    <td class="px-6 py-4 font-medium">
+                                    <td class="px-6 py-4 text-xs w-[150px]">
                                         {{ $payment->payment_number }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[150px]">
                                         {{ $payment->invoice->invoice_number }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[250px]">
                                         {{ $payment->invoice->company->name }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[100px]">
                                         {{ $payment->invoice->reference }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[250px]">
                                         {{ Str::limit($payment->notes, 50) }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[120px]">
                                         ₱{{ number_format($payment->amount, 2) }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-xs w-[70px]">
                                         @if ($payment->status == 1)
                                             <span
                                                 class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Active</span>
@@ -438,7 +452,7 @@
                                                 class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Voided</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 flex items-center justify-center space-x-2">
+                                    <td class="px-6 py-4 text-xs w-[80px] flex items-center justify-center space-x-2">
                                         <button type="button" title="Edit payment : {{ $payment->payment_number }}"
                                             data-modal-target="edit-payment-modal" data-modal-toggle="edit-payment-modal"
                                             data-id="{{ $payment->id }}"
@@ -1026,6 +1040,46 @@
             <!-- End edit payment -->
 
             <script>
+                function formatDateForInput(dateString) {
+                    if (!dateString) return '';
+
+                    const date = new Date(dateString);
+                    if (isNaN(date)) return '';
+
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+
+                    return `${year}-${month}-${day}`;
+                }
+
+                document.getElementById('company_id').addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const companyName = selectedOption.textContent;
+                    //get billing from deployment and payment made for the company
+                    $.ajax({
+                        url: `/api/company/${this.value}/billing-info`,
+                        method: 'GET',
+                        success: function(data) {
+                            totalDueFromDeployment = data.total_due_from_deployments || 0;
+                            totalNotBilled = totalDueFromDeployment - (data.total_billed || 0);
+                            totalBalance = data.outstanding_balance || 0;
+
+                            totalToBill = totalNotBilled ? totalNotBilled : totalBalance;
+
+                            // alert(
+                            //     `Total due from deployment: ${totalDueFromDeployment}\nTotal already billed: ${data.total_billed || 0}\nOutstanding balance: ${totalBalance}\n\nTotal amount to bill for this company: ${totalToBill > 0 ? totalToBill : 0}`
+                            // );
+
+                            document.getElementById('amount').value = totalToBill > 0 ? totalToBill : 0;
+
+                        },
+                        error: function() {
+                            document.getElementById('amount').value = '';
+                        }
+                    });
+                });
+
                 function clearModalFields() {
                     // Clear all form fields
                     const form = document.querySelector('form');
@@ -1045,10 +1099,11 @@
                     document.getElementById('edit_id').value = id;
                     document.getElementById('edit_company_name').value = button.getAttribute('data-company_name');
                     document.getElementById('edit_invoice_number').value = button.getAttribute('data-invoice_number');
-                    document.getElementById('edit_invoice_date').value = button.getAttribute('data-invoice_date');
+                    document.getElementById('edit_invoice_date').value = formatDateForInput(button.getAttribute(
+                        'data-invoice_date'));
                     document.getElementById('edit_description').value = button.getAttribute('data-description');
                     document.getElementById('edit_amount').value = button.getAttribute('data-amount');
-                    document.getElementById('edit_due_date').value = button.getAttribute('data-due_date');
+                    document.getElementById('edit_due_date').value = formatDateForInput(button.getAttribute('data-due_date'));
                     document.getElementById('edit_payment_terms').value = button.getAttribute('data-payment_terms');
                     document.getElementById('edit_billing_cycle').value = button.getAttribute('data-billing_cycle');
                     document.getElementById('edit_payment_method').value = button.getAttribute('data-payment_method');

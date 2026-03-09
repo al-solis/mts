@@ -1,22 +1,6 @@
 @extends('dashboard')
 @section('content')
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
-    {{-- <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Header -->
-        <div class="mb-2">
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Reports</h1>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Select a report to generate</p>
-        </div>
-    </div>
-    <div class="bg-white rounded-xl border p-4 ml-2 mr-2 mb-4">
-        <div class="grid grid-cols-2 gap-4">
-            <input type="date" id="start_date"
-                class="form-input  bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500">
-            <input type="date" id="end_date"
-                class="form-input  bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-gray-600 focus:border-gray-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500">
-        </div>
-    </div> --}}
-
     <div class="p-6 space-y-6">
 
         {{-- Header --}}
@@ -124,15 +108,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            const firstDay = new Date(
-                new Date().getFullYear(),
-                new Date().getMonth(),
-                1
-            ).toISOString().split('T')[0];
+
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
             document.getElementById('start_date').value = formatDateForInput(firstDay);
             document.getElementById('end_date').value = formatDateForInput(today);
+
+            loadMetrics();
+
+            document.getElementById('start_date').addEventListener('change', loadMetrics);
+            document.getElementById('end_date').addEventListener('change', loadMetrics);
+
         });
 
         let lineChart, barChart, pieChart, monthlyChart;
@@ -262,7 +249,5 @@
 
         document.getElementById('start_date').addEventListener('change', loadMetrics);
         document.getElementById('end_date').addEventListener('change', loadMetrics);
-
-        loadMetrics();
     </script>
 @endsection

@@ -27,42 +27,83 @@ class ResumeController extends Controller
         return view('matching.index', compact('resumes', 'jobs'));
     }
 
+    // public function getByJob($jobId)
+    // {
+    //     $resumes = Resume::with([
+    //         'job',
+    //         'appointments' => function ($query) {
+    //             $query->latest();
+    //         }
+    //     ])
+    //         ->where('job_posting_id', $jobId)
+    //         ->orderBy('created_at', 'desc')
+    //         ->get()
+    //         ->map(function ($resume) {
+    //             $job = $resume->job;
+    //             $settings = Setting::first();
+    //             $passingThreshold = $this->getPassingThreshold($job, $settings);
+
+    //             return [
+    //                 'id' => $resume->id,
+    //                 'applicant' => $resume->applicant_name,
+    //                 'job' => $job->title,
+    //                 'education' => $resume->education_percentage,
+    //                 'experience' => $resume->experience_percentage,
+    //                 'general' => $resume->general_percentage ?? 0,
+    //                 'match' => $resume->match_percentage,
+    //                 'relevance' => $resume->relevance_percentage ?? 0,
+    //                 'status' => $resume->status,
+    //                 'passing_threshold' => $passingThreshold,
+    //                 'tag' => $resume->tag,
+    //                 'interview_round' => $resume->appointments->first()?->interview_round ?? null,
+    //                 'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
+    //             ];
+    //         });
+
+    //     return response()->json([
+    //         'success' => $resumes,
+    //         'count' => $resumes->count(),
+    //     ]);
+    // }
+
     public function getByJob($jobId)
     {
-        $resumes = Resume::with([
+        $query = Resume::with([
             'job',
             'appointments' => function ($query) {
                 $query->latest();
             }
         ])
             ->where('job_posting_id', $jobId)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($resume) {
-                $job = $resume->job;
-                $settings = Setting::first();
-                $passingThreshold = $this->getPassingThreshold($job, $settings);
+            ->orderBy('created_at', 'desc');
 
-                return [
-                    'id' => $resume->id,
-                    'applicant' => $resume->applicant_name,
-                    'job' => $job->title,
-                    'education' => $resume->education_percentage,
-                    'experience' => $resume->experience_percentage,
-                    'general' => $resume->general_percentage ?? 0,
-                    'match' => $resume->match_percentage,
-                    'relevance' => $resume->relevance_percentage ?? 0,
-                    'status' => $resume->status,
-                    'passing_threshold' => $passingThreshold,
-                    'tag' => $resume->tag,
-                    'interview_round' => $resume->appointments->first()?->interview_round ?? null,
-                    'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
+        $count = $query->count();   // database count
+        $settings = Setting::first();
+
+        $resumes = $query->get()->map(function ($resume) use ($settings) {
+            $job = $resume->job;
+            $passingThreshold = $this->getPassingThreshold($job, $settings);
+
+            return [
+                'id' => $resume->id,
+                'applicant' => $resume->applicant_name,
+                'job' => $job->title,
+                'education' => $resume->education_percentage,
+                'experience' => $resume->experience_percentage,
+                'general' => $resume->general_percentage ?? 0,
+                'match' => $resume->match_percentage,
+                'relevance' => $resume->relevance_percentage ?? 0,
+                'status' => $resume->status,
+                'passing_threshold' => $passingThreshold,
+                'tag' => $resume->tag,
+                'interview_round' => $resume->appointments->first()?->interview_round ?? null,
+                'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
 
         return response()->json([
             'success' => $resumes,
-            'count' => $resumes->count(),
+            'count' => $count
         ]);
     }
 
@@ -676,82 +717,68 @@ class ResumeController extends Controller
         return $jobCount > 0 ? ($totalRelevance / $jobCount) : 0;
     }
 
-    // private function matchGeneralQualifications($data, $job): float
-    // {
-    //     $score = 0;
-
-    //     // Skills matching (50% weight)
-    //     $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill)));
-    //     $resumeSkills = [];
-
-    //     foreach ($data['skills'] ?? [] as $skillGroup) {
-    //         foreach ($skillGroup['items'] ?? [] as $skill) {
-    //             $resumeSkills[] = strtolower(trim($skill));
-    //         }
-    //     }
-
-    //     $skillMatches = array_intersect($jobSkills, array_unique($resumeSkills));
-    //     $skillScore = $jobSkills ? (count($skillMatches) / count($jobSkills)) * 100 : 0;
-    //     $score += $skillScore * 0.5;
-
-    //     // Certifications (30% weight)
-    //     $certCount = count($data['certifications'] ?? []);
-    //     $certScore = 0;
-
-    //     if ($certCount >= 5)
-    //         $certScore = 100;
-    //     elseif ($certCount >= 3)
-    //         $certScore = 75;
-    //     elseif ($certCount >= 1)
-    //         $certScore = 50;
-
-    //     $score += $certScore * 0.3;
-
-    //     // Soft skills (20% weight)
-    //     $softSkills = $data['soft_skills'] ?? [];
-    //     $softSkillScore = count($softSkills) > 5 ? 100 : (count($softSkills) * 20);
-    //     $score += $softSkillScore * 0.2;
-
-    //     return min($score, 100);
-    // }
-
     private function matchGeneralQualifications($data, $job): float
     {
         $score = 0;
 
-        //Skills matching (50%)
-        $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill)));
+        // Skills matching (50%)
+        $jobSkills = array_map('strtolower', array_map('trim', explode(',', $job->skill ?? '')));
+
         $resumeSkills = [];
+
         foreach ($data['skills'] ?? [] as $skillGroup) {
-            foreach ($skillGroup['items'] ?? [] as $skill) {
-                $resumeSkills[] = strtolower(trim($skill));
+
+            // Case 1: skills are plain strings
+            if (is_string($skillGroup)) {
+                $resumeSkills[] = strtolower(trim($skillGroup));
+            }
+
+            // Case 2: structured AI output
+            if (is_array($skillGroup) && isset($skillGroup['items'])) {
+                foreach ($skillGroup['items'] as $skill) {
+                    $resumeSkills[] = strtolower(trim($skill));
+                }
             }
         }
-        $skillMatches = array_intersect($jobSkills, array_unique($resumeSkills));
-        $skillScore = $jobSkills ? (count($skillMatches) / count($jobSkills)) * 100 : 0;
+
+        $resumeSkills = array_unique($resumeSkills);
+
+        $skillMatches = array_intersect($jobSkills, $resumeSkills);
+
+        $skillScore = count($jobSkills) > 0
+            ? (count($skillMatches) / count($jobSkills)) * 100
+            : 0;
+
         $score += $skillScore * 0.5;
 
-        //Certifications (30%)
+        // Certifications (30%)
         $certCount = count($data['certifications'] ?? []);
         $certScore = $certCount >= 5 ? 100 : ($certCount >= 3 ? 75 : ($certCount >= 1 ? 50 : 0));
+
         $score += $certScore * 0.3;
 
-        //Soft skills (20%)
+        // Soft skills (20%)
         $softSkills = $data['soft_skills'] ?? [];
-        $softSkillScore = count($softSkills) > 5 ? 100 : (count($softSkills) * 20);
+
+        $softSkillScore = count($softSkills) > 5
+            ? 100
+            : (count($softSkills) * 20);
+
         $score += $softSkillScore * 0.2;
 
-        //Location bonus (5% of general_percentage)
+        // Location bonus (5%)
         $matchLocationScore = 0;
 
         $applicantAddress = $data['address'] ?? null;
         $companyAddress = $job->company->location ?? null;
 
         if ($applicantAddress && $companyAddress) {
+
             $applicantCoords = $this->geocodeAddress($applicantAddress);
             $companyCoords = $this->geocodeAddress($companyAddress);
 
             if ($applicantCoords && $companyCoords) {
+
                 $distance = $this->haversineDistance(
                     $applicantCoords['lat'],
                     $applicantCoords['lng'],
@@ -759,11 +786,10 @@ class ResumeController extends Controller
                     $companyCoords['lng']
                 );
 
-                // Example scoring: <=5 km = 100, 5-20km linear drop, >50km = 0
                 if ($distance <= 5) {
                     $matchLocationScore = 100;
                 } elseif ($distance <= 20) {
-                    $matchLocationScore = 100 * (1 - ($distance - 5) / 15); // linear scale
+                    $matchLocationScore = 100 * (1 - ($distance - 5) / 15);
                 } elseif ($distance <= 50) {
                     $matchLocationScore = 50 * (1 - ($distance - 20) / 30);
                 } else {
@@ -772,8 +798,8 @@ class ResumeController extends Controller
             }
         }
 
-        // Add 5% weight for location
-        $score = $score * 0.95 + ($matchLocationScore * 0.05);
+        // Apply location weight
+        $score = ($score * 0.95) + ($matchLocationScore * 0.05);
 
         return min($score, 100);
     }
