@@ -1,267 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services\AI;
 
-use App\Http\Controllers\Controller;
-use App\Services\AI\ResumeExtractionService;
-use App\Services\AI\EmbeddingService;
-use App\Services\AI\ResumeTextExtractor;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use App\Models\Resume;
 use App\Models\JobPosting;
-use App\Models\setting;
-use App\Models\appointment;
-use App\Models\Company;
-use App\Jobs\ProcessResumeJob;
+use App\Models\Setting;
+use Illuminate\Support\Str;
 
-class ResumeController extends Controller
+class ResumeMatchingService
 {
-
-    public function index()
+    /**
+     * Calculate full match score for a resume
+     */
+    public function calculateMatch(array $data, JobPosting $job, Setting $settings): array
     {
-        $resumes = Resume::with('job')->get();
-        $jobs = JobPosting::where('status', '1')->with('company')->get();
-
-        return view('matching.index', compact('resumes', 'jobs'));
-    }
-
-    public function getByJob($jobId)
-    {
-        $query = Resume::with([
-            'job',
-            'appointments' => function ($query) {
-                $query->latest();
-            }
-        ])
-            ->where('job_posting_id', $jobId)
-            ->orderBy('created_at', 'desc');
-
-        $count = $query->count();
-        $settings = Setting::first();
-
-        $resumes = $query->get()->map(function ($resume) use ($settings) {
-            $job = $resume->job;
-            $passingThreshold = $this->getPassingThreshold($job, $settings);
-
-            return [
-                'id' => $resume->id,
-                'applicant' => $resume->applicant_name,
-                'job' => $job->title,
-                'education' => $resume->education_percentage,
-                'experience' => $resume->experience_percentage,
-                'general' => $resume->general_percentage ?? 0,
-                'match' => $resume->match_percentage,
-                'relevance' => $resume->relevance_percentage ?? 0,
-                'status' => $resume->status,
-                'passing_threshold' => $passingThreshold,
-                'tag' => $resume->tag,
-                'interview_round' => $resume->appointments->first()?->interview_round ?? null,
-                'created_at' => $resume->created_at->format('Y-m-d H:i:s'),
-            ];
-        });
-
-        return response()->json([
-            'success' => $resumes,
-            'count' => $count
-        ]);
-    }
-
-    public function upload(Request $request)
-    {
-        $validated = $request->validate([
-            'job_id' => 'required|exists:job_postings,id',
-            'resumes' => 'required|array|max:10'
-        ]);
-
-        $jobs = [];
-
-        foreach ($request->file('resumes') as $file) {
-            try {
-                // Create a unique filename
-                $filename = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $file->getClientOriginalName());
-
-                // Define public path
-                $publicPath = public_path('uploads/resumes/' . $filename);
-
-                // Create directory if it doesn't exist
-                if (!file_exists(public_path('uploads/resumes'))) {
-                    mkdir(public_path('uploads/resumes'), 0777, true);
-                }
-
-                // Copy file to public directory
-                copy($file->getRealPath(), $publicPath);
-
-                Log::info('File copied to public folder', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'public_path' => $publicPath,
-                    'file_exists' => file_exists($publicPath) ? 'yes' : 'no',
-                    'file_size' => filesize($publicPath)
-                ]);
-
-                $jobs[] = new ProcessResumeJob(
-                    $publicPath,  // Pass the full public path
-                    $file->getClientOriginalName(),
-                    $request->job_id,
-                    Auth::id()
-                );
-
-            } catch (\Exception $e) {
-                Log::error('Failed to copy file to public folder', [
-                    'file' => $file->getClientOriginalName(),
-                    'error' => $e->getMessage()
-                ]);
-
-                return response()->json([
-                    'error' => 'Failed to upload file: ' . $file->getClientOriginalName()
-                ], 500);
-            }
-        }
-
-        Bus::batch($jobs)
-            ->name('Resume Processing Batch')
-            ->dispatch();
-
-        return response()->json([
-            'message' => 'Resumes uploaded and processing in background',
-            'count' => count($jobs)
-        ]);
-    }
-
-    // Fallback method for basic info extraction
-    private function extractBasicInfo(string $text): array
-    {
-        $data = [
-            'name' => 'Unknown Applicant',
-            'email' => null,
-            'years_experience' => 0,
-            'education' => [],
-            'skills' => [],
-            'certifications' => [],
-            'work_history' => []
-        ];
-
-        // Try to extract email
-        if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $text, $emailMatches)) {
-            $data['email'] = $emailMatches[0];
-        }
-
-        // Try to extract name (simple pattern)
-        $lines = explode("\n", $text);
-        if (!empty($lines[0]) && strlen(trim($lines[0])) < 100) {
-            $data['name'] = trim($lines[0]);
-        }
-
-        // Extract skills (simple keyword matching)
-        $skillKeywords = ['php', 'javascript', 'python', 'java', 'sql', 'html', 'css', 'laravel', 'react', 'vue'];
-        foreach ($skillKeywords as $skill) {
-            if (stripos($text, $skill) !== false) {
-                $data['skills'][] = ucfirst($skill);
-            }
-        }
-
-        return $data;
-    }
-
-    function getIndustrySkills($industry)
-    {
-        $industrySkills = [
-
-            'Information Technology' => [
-                'php',
-                'javascript',
-                'python',
-                'java',
-                'sql',
-                'html',
-                'css',
-                'laravel',
-                'react',
-                'vue',
-                'nodejs',
-                'mysql',
-                'api',
-                'git'
-            ],
-
-            'Healthcare' => [
-                'patient care',
-                'medical terminology',
-                'ehr',
-                'clinical documentation',
-                'vital signs',
-                'infection control',
-                'pharmacology'
-            ],
-
-            'Finance' => [
-                'accounting',
-                'financial analysis',
-                'bookkeeping',
-                'taxation',
-                'audit',
-                'excel',
-                'quickbooks',
-                'budgeting',
-                'forecasting'
-            ],
-
-            'Manufacturing' => [
-                'quality control',
-                'production planning',
-                'lean manufacturing',
-                'supply chain',
-                'inventory management',
-                'maintenance'
-            ],
-
-            'Education' => [
-                'curriculum development',
-                'lesson planning',
-                'classroom management',
-                'student assessment',
-                'e-learning',
-                'research'
-            ],
-
-            'Construction' => [
-                'project management',
-                'autocad',
-                'cost estimation',
-                'site supervision',
-                'blueprint reading',
-                'safety compliance'
-            ],
-
-            'Retail' => [
-                'sales',
-                'inventory control',
-                'customer service',
-                'merchandising',
-                'pos systems',
-                'cash handling'
-            ],
-
-            'BPO' => [
-                'customer support',
-                'call handling',
-                'crm',
-                'technical support',
-                'email support',
-                'data entry'
-            ]
-        ];
-
-        return $industrySkills[$industry] ?? [];
-    }
-
-    public function calculateMatch($data, $job, $settings)
-    {
-        // Calculate each component with their respective weights
         $educationScore = $this->matchEducation($data['education'] ?? [], $job->qualification, $settings);
         $experienceScore = $this->matchExperience($data['years_experience'] ?? 0, $job);
         $relevanceScore = $this->matchWorkExperienceRelevance($data['work_history'] ?? [], $job);
@@ -274,15 +25,26 @@ class ResumeController extends Controller
             ($relevanceScore * ($settings->work_experience_relevance / 100)) +
             ($generalScore * ($settings->general / 100))
         );
+        // $total = (
+        //     ($educationScore * ($settings->education / 100)) +
+        //     ($experienceScore * ($settings->years_of_experience / 100)) +
+        //     ($relevanceScore * ($settings->work_experience_relevance / 100)) +
+        //     ($skillsScore * ($settings->skills / 100)) +
+        //     ($certificationsScore * ($settings->certifications / 100)) +
+        //     ($softSkillsScore * ($settings->soft_skills / 100)) +
+        //     ($locationScore * ($settings->location / 100))
+        // );
 
-        Log::info('Match Calculation Results', [
-            'education' => $educationScore,
-            'experience' => $experienceScore,
-            'relevance' => $relevanceScore,
-            'general' => $generalScore,
-            'total' => $total
-        ]);
-
+        // return [
+        //     'education_percentage' => $educationScore,
+        //     'experience_percentage' => $experienceScore,
+        //     'relevance_percentage' => $relevanceScore,
+        //     'skills_percentage' => $skillsScore,
+        //     'certifications_percentage' => $certificationsScore,
+        //     'soft_skills_percentage' => $softSkillsScore,
+        //     'location_percentage' => $locationScore,
+        //     'total_percentage' => $total
+        // ];
         return [
             'education_percentage' => $educationScore,
             'experience_percentage' => $experienceScore,
@@ -291,6 +53,8 @@ class ResumeController extends Controller
             'total_percentage' => $total
         ];
     }
+
+    /** ---------------- Matching methods ---------------- **/
 
     private function matchEducation($resumeEducation, $jobQualification, $settings = null): float
     {
@@ -702,26 +466,4 @@ class ResumeController extends Controller
         return $settings->minimum_match_percentage ?? 70;
     }
 
-    public function getApplicantsByJob($jobId)
-    {
-        $applicants = Resume::where('job_posting_id', $jobId)
-            ->where(function ($query) {
-                $query->whereDoesntHave('appointments')
-                    ->orWhereHas('appointments', function ($q) {
-                        $q->where('status', '!=', 0);
-                    });
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json($applicants);
-    }
-
-    public function markAsPassed($id)
-    {
-        $resume = Resume::findOrFail($id);
-        $resume->update(['tag' => 2]); // 2 = Passed
-
-        return response()->json(['success' => true, 'message' => 'Resume marked as passed']);
-    }
 }

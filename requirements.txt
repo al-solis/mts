@@ -94,3 +94,17 @@ memory_limit = 512M
 # Has required certifications → Higher score
 
 # Lacks key skills → Lower score
+
+php artisan queue:table
+php artisan migrate
+
+For production run multiple workers:
+
+php artisan queue:work --timeout=120
+
+Or with 8 workers:
+
+php artisan queue:work --daemon
+
+
+php artisan make:command CleanupResumeFiles

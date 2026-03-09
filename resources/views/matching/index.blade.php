@@ -127,24 +127,20 @@
         function loadJobResumes(jobId) {
             if (!jobId) {
                 resultsBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-gray-400">
-                        Select a job to view previous results
-                    </td>
-                </tr>
-            `;
+            <div class="text-center py-6 text-gray-400">
+                Select a job to view previous results
+            </div>
+        `;
                 return;
             }
 
             // Show loading state
             resultsBody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-8">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                    <p class="mt-2 text-gray-600">Loading previous results...</p>
-                </td>
-            </tr>
-            `;
+        <div class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p class="mt-2 text-gray-600">Loading results...</p>
+        </div>
+    `;
 
             // Fetch resumes for this job
             fetch(`/resume/by-job/${jobId}`, {
@@ -162,13 +158,26 @@
                 .then(data => {
                     updateResultsTable(data.success || []);
 
-                    // Add count indicator
-                    if (data.count > 0) {
-                        const jobInfo = document.getElementById('jobInfo');
-                        if (jobInfo) {
+                    // Update job info - REPLACE content instead of appending
+                    const jobInfo = document.getElementById('jobInfo');
+                    if (jobInfo) {
+                        // Clear existing content first
+                        jobInfo.innerHTML = '';
+
+                        // Add the count indicator
+                        if (data.count > 0) {
                             jobInfo.innerHTML = `
                         <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
                             Loaded ${data.count} previous resume(s) for this job
+                        </div>
+                        <div class="mt-1 text-xs text-blue-600">
+                            Total: ${data.count} resume(s)
+                        </div>
+                    `;
+                        } else {
+                            jobInfo.innerHTML = `
+                        <div class="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm">
+                            No resumes found for this job
                         </div>
                     `;
                         }
@@ -177,11 +186,9 @@
                 .catch(error => {
                     console.error('Error loading job resumes:', error);
                     resultsBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-red-600">
-                        Failed to load previous results. ${error.message}
-                    </td>
-                </tr>
+                <div class="text-center py-6 text-red-600">
+                    Failed to load results: ${error.message}
+                </div>
             `;
                 });
         }
@@ -373,6 +380,7 @@
         // Event listener for job selection
         jobSelect.addEventListener('change', function() {
             const jobId = this.value;
+            const jobInfoContainer = document.getElementById('jobInfoContainer');
 
             if (jobId) {
                 resumeInput.disabled = false;
@@ -382,32 +390,34 @@
                 // Load existing resumes for this job
                 loadJobResumes(jobId);
 
-                // Update job info display
+                // Update job info display - REPLACE instead of create new
                 const selectedOption = this.options[this.selectedIndex];
-                const jobInfo = document.getElementById('jobInfo');
-                if (!jobInfo) {
-                    // Create job info display if it doesn't exist
-                    const jobSelectionDiv = document.querySelector('.bg-white.p-4.rounded.shadow:first-child');
-                    const infoDiv = document.createElement('div');
-                    infoDiv.id = 'jobInfo';
-                    infoDiv.className = 'mt-2 text-sm';
-                    jobSelectionDiv.appendChild(infoDiv);
+                const jobText = selectedOption.textContent;
+
+                if (jobInfoContainer) {
+                    // Replace the entire content
+                    jobInfoContainer.innerHTML = `
+                <div id="jobInfo" class="text-sm">
+                    <div class="bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                        <div class="font-medium">Selected Job:</div>
+                        <div class="mt-1">${jobText}</div>
+                        <div id="jobCountInfo" class="mt-1 text-xs text-blue-600"></div>
+                    </div>
+                </div>
+            `;
                 }
             } else {
                 resumeInput.disabled = true;
                 uploadBtn.disabled = true;
                 resultsBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-gray-400">
-                        Select a job to view previous results
-                    </td>
-                </tr>
-            `;
+            <div class="text-center py-6 text-gray-400">
+                Select a job to view previous results
+            </div>
+        `;
 
                 // Clear job info
-                const jobInfo = document.getElementById('jobInfo');
-                if (jobInfo) {
-                    jobInfo.innerHTML = '';
+                if (jobInfoContainer) {
+                    jobInfoContainer.innerHTML = '';
                 }
             }
         });
@@ -420,7 +430,11 @@
             }
         });
 
-        // Update the form submission handler to reload after upload
+        // Keep track of processed files
+        let processedFiles = new Set();
+        let totalFiles = 0;
+
+        // Update the form submission handler
         document.getElementById('resumeForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -428,18 +442,21 @@
             const uploadBtn = document.getElementById('uploadBtn');
             const currentJobId = selectedJob.value;
 
-            uploadBtn.innerText = 'Processing...';
+            // Get total number of files being uploaded
+            const fileInput = document.getElementById('resumes');
+            totalFiles = fileInput.files.length;
+            processedFiles.clear();
+
+            uploadBtn.innerText = 'Uploading...';
             uploadBtn.disabled = true;
 
-            // Show loading state
             resultsBody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-8">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                    <p class="mt-2 text-gray-600">Processing resumes...</p>
-                </td>
-            </tr>
-        `;
+        <div class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p class="mt-2 text-gray-600">Uploading resumes and sending to queue...</p>
+            <p class="text-sm text-gray-500 mt-1">0/${totalFiles} files processed</p>
+        </div>
+    `;
 
             fetch("{{ route('resume.upload.match') }}", {
                     method: 'POST',
@@ -456,28 +473,121 @@
                     return res.json();
                 })
                 .then(data => {
-                    console.log('Response data:', data);
+                    console.log(data);
 
-                    // Reload the resumes for this job to show updated list
-                    loadJobResumes(currentJobId);
+                    showNotification(
+                        'Resumes uploaded successfully. Processing in background...',
+                        'success'
+                    );
 
-                    // Show success notification
-                    showNotification('Successfully processed ' + data.summary.processed + ' resume(s)',
-                        'success');
-
-                    // Clear file input
                     document.getElementById('resumes').value = '';
+
+                    // Start polling with improved feedback
+                    enhancedPollResumes(currentJobId, totalFiles);
 
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error(error);
                     showNotification('Upload failed: ' + error.message, 'error');
+                    resultsBody.innerHTML = `
+                <div class="text-center py-6 text-red-600">
+                    Upload failed: ${error.message}
+                </div>
+            `;
                 })
                 .finally(() => {
                     uploadBtn.innerText = 'Upload & Match';
                     uploadBtn.disabled = false;
                 });
         });
+
+        // Enhanced polling function
+        function enhancedPollResumes(jobId, expectedCount) {
+            let attempts = 0;
+            let previousCount = 0;
+            let stableCount = 0;
+            let lastUpdateTime = Date.now();
+
+            const interval = setInterval(() => {
+                attempts++;
+
+                // Fetch current resumes
+                fetch(`/resume/by-job/${jobId}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        const currentCount = data.count || 0;
+
+                        // Update progress indicator if it exists
+                        const progressText = document.querySelector('.text-gray-500');
+                        if (progressText) {
+                            progressText.innerHTML = `${currentCount}/${expectedCount} files processed`;
+                        }
+
+                        // Only update the table if data has changed
+                        const currentDataString = JSON.stringify(data.success);
+                        const lastDataString = window.lastResultsData || '';
+
+                        if (currentDataString !== lastDataString) {
+                            updateResultsTable(data.success || []);
+                            window.lastResultsData = currentDataString;
+                            lastUpdateTime = Date.now();
+                        }
+
+                        // Update job info without duplication
+                        const jobInfo = document.getElementById('jobInfo');
+                        if (jobInfo) {
+                            // Find or create the count display
+                            let countDisplay = document.getElementById('jobCountInfo');
+                            if (!countDisplay) {
+                                countDisplay = document.createElement('div');
+                                countDisplay.id = 'jobCountInfo';
+                                countDisplay.className = 'mt-1 text-xs text-blue-600';
+                                jobInfo.appendChild(countDisplay);
+                            }
+                            countDisplay.textContent = `Total: ${currentCount} resume(s)`;
+                        }
+
+                        // Check if all files are processed
+                        if (currentCount >= expectedCount) {
+                            if (currentCount === previousCount) {
+                                stableCount++;
+                                if (stableCount >= 2) {
+                                    clearInterval(interval);
+                                    showNotification(`All ${expectedCount} resumes processed successfully!`,
+                                        'success');
+                                }
+                            } else {
+                                stableCount = 0;
+                            }
+                        }
+
+                        previousCount = currentCount;
+
+                        // Stop after 30 attempts
+                        if (attempts >= 30) {
+                            clearInterval(interval);
+                            if (currentCount < expectedCount) {
+                                showNotification(
+                                    `Processed ${currentCount}/${expectedCount} files. Check back later for remaining results.`,
+                                    'info');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Polling error:', error);
+                    });
+
+            }, 5000);
+        }
+
+        function pollResumes(jobId) {
+            enhancedPollResumes(jobId, 1); // Assume 1 file if not specified
+        }
 
         // Notification function
         function showNotification(message, type = 'info') {
