@@ -62,6 +62,32 @@ class MetricsController extends Controller
             ->join('resumes', 'deployments.resume_id', '=', 'resumes.id')
             ->avg(DB::raw('DATEDIFF(DAY, resumes.created_at, deployments.start_date)'));
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | BILLED VS PAYMENT PER COMPANY (BAR CHART)
+        |--------------------------------------------------------------------------
+        */
+        $billing = DB::table('companies as c')
+            ->leftJoin('invoices as i', function ($join) use ($start, $end) {
+                $join->on('c.id', '=', 'i.company_id')
+                    ->whereBetween('i.invoice_date', [$start, $end])
+                    ->where('i.status', '!=', 3);
+            })
+            ->leftJoin('payments as p', function ($join) use ($start, $end) {
+                $join->on('i.id', '=', 'p.invoice_id')
+                    ->whereBetween('p.payment_date', [$start, $end])
+                    ->where('p.status', 1);
+            })
+            ->groupBy('c.id', 'c.name')
+            ->select(
+                'c.name',
+                DB::raw('COALESCE(SUM(DISTINCT i.amount),0) as total_billed'),
+                DB::raw('COALESCE(SUM(p.amount),0) as total_paid')
+            )
+            ->orderBy('c.name')
+            ->get();
+
         /*
         |--------------------------------------------------------------------------
         | DAILY DEPLOYMENTS (LINE CHART)
@@ -178,6 +204,7 @@ class MetricsController extends Controller
                 'conversionRate' => $conversionRate,
                 'avgTimeToDeploy' => round($avgTimeToDeploy ?? 0, 1),
             ],
+            'billing' => $billing,
             'dailyDeployments' => $dailyDeployments,
             'topCompanies' => $topCompanies,
             'industryData' => $industryData,

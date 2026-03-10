@@ -56,12 +56,17 @@
 
         {{-- ================= CHART SECTION ================= --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- Billed vs Payment per Company --}}
+            <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
+                <h3 class="text-lg font-semibold mb-4">Billed vs Payment per Company</h3>
+                <canvas id="billingCompanyChart" class="w-full h-full"></canvas>
+            </div>
 
             {{-- Deployments Over Time --}}
-            <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
+            {{-- <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
                 <h3 class="text-lg font-semibold mb-4">Deployments Over Time</h3>
                 <canvas id="dailyChart" class="w-full h-full"></canvas>
-            </div>
+            </div> --}}
 
             {{-- Top Companies --}}
             <div class="bg-white rounded-xl shadow p-6">
@@ -122,7 +127,7 @@
 
         });
 
-        let lineChart, barChart, pieChart, monthlyChart;
+        let lineChart, barChart, pieChart, monthlyChart, billingCompanyChart;
 
         function loadMetrics() {
 
@@ -146,37 +151,109 @@
                     document.getElementById('totalInterviews').innerText = s.totalInterviews;
 
                     // =============================
-                    // DAILY LINE CHART
+                    // BILLING VS PAYMENT BAR CHART
                     // =============================
-                    if (lineChart) lineChart.destroy();
+                    if (billingCompanyChart) billingCompanyChart.destroy();
 
-                    lineChart = new Chart(document.getElementById('dailyChart'), {
-                        type: 'line',
+                    billingCompanyChart = new Chart(document.getElementById('billingCompanyChart'), {
+                        type: 'bar',
                         data: {
-                            labels: data.dailyDeployments.map(i => i.date),
+                            labels: data.billing.map(i => i.name),
                             datasets: [{
-                                label: 'Daily Deployments',
-                                data: data.dailyDeployments.map(i => i.total),
-                                borderColor: '#3b82f6',
-                                fill: false
-                            }]
+                                    label: 'Total Billed',
+                                    data: data.billing.map(i => i.total_billed),
+                                    backgroundColor: '#3b82f6'
+                                },
+                                {
+                                    label: 'Total Paid',
+                                    data: data.billing.map(i => i.total_paid),
+                                    backgroundColor: '#22c55e'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    stacked: false
+                                },
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
                         }
                     });
 
                     // =============================
-                    // TOP COMPANIES BAR
+                    // DAILY LINE CHART
                     // =============================
+                    // if (lineChart) lineChart.destroy();
+
+                    // lineChart = new Chart(document.getElementById('dailyChart'), {
+                    //     type: 'line',
+                    //     data: {
+                    //         labels: data.dailyDeployments.map(i => i.date),
+                    //         datasets: [{
+                    //             label: 'Daily Deployments',
+                    //             data: data.dailyDeployments.map(i => i.total),
+                    //             borderColor: '#3b82f6',
+                    //             fill: false
+                    //         }]
+                    //     }
+                    // });
+
+                    // =============================
+                    // TOP COMPANIES BAR
+                    // =============================                    
+
                     if (barChart) barChart.destroy();
 
-                    barChart = new Chart(document.getElementById('companyChart'), {
+                    const ctx = document.getElementById('companyChart').getContext('2d');
+
+                    const total = data.topCompanies.length;
+
+                    // Generate gradient colors automatically
+                    const gradients = data.topCompanies.map((c, i) => {
+
+                        const hue = Math.round((360 / total) * i);
+
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+
+                        gradient.addColorStop(0, `hsl(${hue}, 75%, 60%)`);
+                        gradient.addColorStop(1, `hsl(${hue}, 75%, 40%)`);
+
+                        return gradient;
+                    });
+
+                    barChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
                             labels: data.topCompanies.map(c => c.name),
                             datasets: [{
                                 label: 'Deployments',
                                 data: data.topCompanies.map(c => c.deployments_count),
-                                backgroundColor: '#10b981'
+                                backgroundColor: gradients,
+                                borderRadius: 6,
+                                borderSkipped: false
                             }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
                         }
                     });
 
@@ -207,9 +284,44 @@
                     // =============================
                     // MONTHLY BAR
                     // =============================
+                    // if (monthlyChart) monthlyChart.destroy();
+
+                    // monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                    //     type: 'bar',
+                    //     data: {
+                    //         labels: data.monthlyDeployments.map(m => {
+                    //             const date = new Date(m.year, m.month - 1);
+                    //             return date.toLocaleString('default', {
+                    //                 month: 'short',
+                    //                 year: 'numeric'
+                    //             });
+                    //         }),
+                    //         datasets: [{
+                    //             label: 'Deployments',
+                    //             data: data.monthlyDeployments.map(m => m.total),
+                    //             backgroundColor: '#14b8a6'
+                    //         }]
+                    //     }
+                    // });
+
                     if (monthlyChart) monthlyChart.destroy();
 
-                    monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+
+                    const months = data.monthlyDeployments.length;
+
+                    const monthlyGradients = data.monthlyDeployments.map((m, i) => {
+
+                        const hue = Math.round((360 / months) * i);
+
+                        const gradient = monthlyCtx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, `hsl(${hue}, 75%, 65%)`);
+                        gradient.addColorStop(1, `hsl(${hue}, 75%, 45%)`);
+
+                        return gradient;
+                    });
+
+                    monthlyChart = new Chart(monthlyCtx, {
                         type: 'bar',
                         data: {
                             labels: data.monthlyDeployments.map(m => {
@@ -222,8 +334,23 @@
                             datasets: [{
                                 label: 'Deployments',
                                 data: data.monthlyDeployments.map(m => m.total),
-                                backgroundColor: '#14b8a6'
+                                backgroundColor: monthlyGradients,
+                                borderRadius: 6,
+                                borderSkipped: false
                             }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
                         }
                     });
 

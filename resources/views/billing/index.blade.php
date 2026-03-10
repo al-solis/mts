@@ -313,10 +313,10 @@
                                                 class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Paid</span>
                                         @elseif($invoice->status == 3)
                                             <span
-                                                class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Voided</span>
+                                                class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Voided</span>
                                         @else
                                             <span
-                                                class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">Unpaid</span>
+                                                class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Unpaid</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-xs w-[120px]">
