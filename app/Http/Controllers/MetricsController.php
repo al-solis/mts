@@ -150,7 +150,7 @@ class MetricsController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $monthlyDeployments = Deployment::whereBetween('deployments.start_date', [$start, $end])
+        $monthlyDeploymentsRaw = Deployment::whereBetween('deployments.start_date', [$start, $end])
             ->selectRaw('
         YEAR(deployments.start_date) as year,
         MONTH(deployments.start_date) as month,
@@ -162,7 +162,27 @@ class MetricsController extends Controller
             )
             ->orderBy('year')
             ->orderBy('month')
-            ->get();
+            ->get()
+            ->keyBy(function ($item) {
+                return $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+            });
+
+        $startDate = Carbon::parse($start)->startOfMonth();
+        $endDate = Carbon::parse($end)->startOfMonth();
+
+        $monthlyDeployments = [];
+
+        while ($startDate <= $endDate) {
+            $key = $startDate->format('Y-m');
+
+            $monthlyDeployments[] = [
+                'year' => $startDate->year,
+                'month' => $startDate->month,
+                'total' => $monthlyDeploymentsRaw[$key]->total ?? 0
+            ];
+
+            $startDate->addMonth();
+        }
 
         /*
         |--------------------------------------------------------------------------

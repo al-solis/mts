@@ -322,7 +322,7 @@
                     });
 
                     monthlyChart = new Chart(monthlyCtx, {
-                        type: 'bar',
+                        type: 'line',
                         data: {
                             labels: data.monthlyDeployments.map(m => {
                                 const date = new Date(m.year, m.month - 1);
