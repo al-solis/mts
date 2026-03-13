@@ -41,21 +41,19 @@
                 <div class="mt-7 grid gap-3 w-full sm:inline-flex">
                     @if (Route::has('login'))
                         @auth
-                            <a class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg bg-layer border border-layer-line text-layer-foreground shadow-2xs hover:bg-layer-hover focus:outline-hidden focus:bg-layer-focus disabled:opacity-50 disabled:pointer-events-none"
+                            <a class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg 
+                            bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none"
                                 href="{{ url('/dashboard') }}">
                                 Dashboard
                             </a>
                         @else
-                            <a class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg bg-blue border border-blue-line text-blue-foreground hover:bg-blue-hover focus:outline-hidden focus:bg-blue-focus disabled:opacity-50 disabled:pointer-events-none"
+                            <a class="py-3 px-4 w-[120px] inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg 
+                                bg-blue-600 text-white hover:bg-blue-700 focus:outline-none"
                                 href="{{ route('login') }}">
                                 Login
-                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                    height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg>
                             </a>
-                            <a class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg bg-layer border border-layer-line text-layer-foreground shadow-2xs hover:bg-layer-hover focus:outline-hidden focus:bg-layer-focus disabled:opacity-50 disabled:pointer-events-none"
+                            <a class="py-3 px-4 w-[120px] inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg 
+                                bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none"
                                 href="{{ route('register') }}">
                                 Register
                             </a>
@@ -146,7 +144,11 @@
     @if (Route::has('login'))
         <div class="h-14.5 hidden lg:block"></div>
     @endif --}}
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous">
+    </script>
+    <script src="{{ asset('assets/js/preline.js') }}"></script>
+    <script src="{{ asset('assets/js/flowbite.min.js') }}"></script>
 </body>
 
 </html>
