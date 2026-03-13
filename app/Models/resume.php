@@ -13,6 +13,7 @@ class Resume extends Model
         'job_posting_id',
         'applicant_name',
         'applicant_email',
+        'photo',
         'years_of_experience',
         'education',
         'skills',

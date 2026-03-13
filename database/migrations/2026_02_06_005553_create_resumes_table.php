@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->foreign('job_posting_id')->references('id')->on('job_postings');
             $table->string('applicant_name');
             $table->string('email')->nullable();
+            $table->string('photo')->nullable();
             $table->integer('years_experience')->default(0);
             $table->json('education')->nullable();
             $table->json('work_history')->nullable();

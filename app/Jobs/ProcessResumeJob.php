@@ -16,6 +16,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use App\Services\AI\ResumeExtractionService;
 use App\Services\AI\EmbeddingService;
 use App\Services\AI\ResumeTextExtractor;
+use App\Services\AI\ResumePhotoExtractor;
 
 class ProcessResumeJob implements ShouldQueue
 {
@@ -51,6 +52,24 @@ class ProcessResumeJob implements ShouldQueue
             // Normalize the path for Windows
             $fullPath = str_replace('/', DIRECTORY_SEPARATOR, $this->publicPath);
 
+            $photoExtractor = new ResumePhotoExtractor();
+            $photo = $photoExtractor->extract($fullPath);
+
+            if ($photo) {
+                $photoUrl = asset('storage/' . $photo);
+                Log::info('Photo extracted successfully', [
+                    'file' => $this->originalName,
+                    'photo_path' => $photo,
+                    'photo_url' => $photoUrl
+                ]);
+            } else {
+                $photoUrl = null;
+                Log::warning('No photo found in resume', [
+                    'file' => $this->originalName,
+                    'file_type' => pathinfo($fullPath, PATHINFO_EXTENSION)
+                ]);
+            }
+
             Log::info('Attempting to extract text from file', [
                 'full_path' => $fullPath,
                 'file_exists' => file_exists($fullPath) ? 'yes' : 'no',
@@ -64,6 +83,15 @@ class ProcessResumeJob implements ShouldQueue
                 ]);
                 return;
             }
+
+            // --- Determine file type ---
+            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            Log::info('Resume file info', [
+                'file' => $this->originalName,
+                'extension' => $extension,
+                'exists' => file_exists($fullPath) ? 'yes' : 'no',
+                'file_size' => file_exists($fullPath) ? filesize($fullPath) : 0
+            ]);
 
             // Extract text from the file
             $text = $textExtractor->extract($fullPath);
@@ -126,6 +154,7 @@ class ProcessResumeJob implements ShouldQueue
                 'job_posting_id' => $job->id,
                 'applicant_name' => $data['name'] ?? 'Unknown Applicant',
                 'email' => $data['email'] ?? null,
+                'photo' => $photo ?? null,
                 'years_experience' => $data['years_experience'] ?? 0,
                 'education' => json_encode($data['education'] ?? []),
                 'skills' => json_encode($data['skills'] ?? []),

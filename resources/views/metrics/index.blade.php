@@ -7,7 +7,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-800">Metrics Dashboard</h1>
-                <p class="text-sm text-gray-500">Deployment & Recruitment Analytics</p>
+                <p class="text-sm text-gray-500">Deployment, Recruitment & Billing Analytics</p>
             </div>
 
             {{-- Date Range --}}

@@ -110,3 +110,7 @@ php artisan queue:work --daemon
 php artisan make:command CleanupResumeFiles
 
 npm install apexcharts@3.46.0 --save
+
+composer require spatie/pdf-to-image
+
+https://imagemagick.org/script/download.php#windows&gsc.tab=0

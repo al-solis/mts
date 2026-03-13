@@ -52,6 +52,7 @@ class ResumeController extends Controller
                 'id' => $resume->id,
                 'applicant' => $resume->applicant_name,
                 'job' => $job->title,
+                'photo' => $resume->photo,
                 'education' => $resume->education_percentage,
                 'experience' => $resume->experience_percentage,
                 'general' => $resume->general_percentage ?? 0,

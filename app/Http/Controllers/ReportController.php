@@ -32,10 +32,10 @@ class ReportController extends Controller
         $query = Invoice::query()->with('company');
 
         $dateRangeLabels = [
-            'this_month' => 'This Month',
-            'last_month' => 'Last Month',
-            'this_quarter' => 'This Quarter',
-            'this_year' => 'This Year',
+            'this_month' => Carbon::now()->format('F Y'),
+            'last_month' => Carbon::now()->subMonth()->format('F Y'),
+            'this_quarter' => Carbon::now()->startOfQuarter()->format('F Y') . ' - ' . Carbon::now()->endOfQuarter()->format('F Y'),
+            'this_year' => Carbon::now()->format('Y'),
             'custom' => 'custom',
         ];
         $pDateRange = $dateRangeLabels[$pDateRange] ?? 'Custom Range';
@@ -113,10 +113,10 @@ class ReportController extends Controller
         $query = Payment::query()->with('invoice.company');
 
         $dateRangeLabels = [
-            'this_month' => 'This Month',
-            'last_month' => 'Last Month',
-            'this_quarter' => 'This Quarter',
-            'this_year' => 'This Year',
+            'this_month' => Carbon::now()->format('F Y'),
+            'last_month' => Carbon::now()->subMonth()->format('F Y'),
+            'this_quarter' => Carbon::now()->startOfQuarter()->format('F Y') . ' - ' . Carbon::now()->endOfQuarter()->format('F Y'),
+            'this_year' => Carbon::now()->format('Y'),
             'custom' => 'custom',
         ];
         $pDateRange = $dateRangeLabels[$pDateRange] ?? 'Custom Range';
