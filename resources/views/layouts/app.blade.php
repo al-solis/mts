@@ -17,7 +17,7 @@
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/flowbite.min.js', 'resources/js/select2.min.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/flowbite.min.js', 'resources/js/select2.min.js', 'resources/js/apexcharts.min.js'])
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 </head>

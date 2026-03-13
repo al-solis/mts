@@ -59,7 +59,7 @@
             {{-- Billed vs Payment per Company --}}
             <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
                 <h3 class="text-lg font-semibold mb-4">Billed vs Payment per Company</h3>
-                <canvas id="billingCompanyChart" class="w-full h-full"></canvas>
+                <div id="billingCompanyChart" class="w-full h-full"></div>
             </div>
 
             {{-- Deployments Over Time --}}
@@ -71,19 +71,21 @@
             {{-- Top Companies --}}
             <div class="bg-white rounded-xl shadow p-6">
                 <h3 class="text-lg font-semibold mb-4">Top Companies by Deployments</h3>
-                <canvas id="companyChart" class="w-full h-full"></canvas>
+                <div id="companyChart" class="w-full h-full"></div>
             </div>
 
             {{-- Industry Distribution --}}
             <div class="bg-white rounded-xl shadow p-6">
                 <h3 class="text-lg font-semibold mb-4">Deployments by Industry</h3>
-                <canvas id="industryChart" class="w-full h-full"></canvas>
+                {{-- <canvas id="industryChart" class="w-full h-full"></canvas> --}}
+                <div id="industryChart" class="w-full h-full"></div>
             </div>
 
             {{-- Monthly Trends --}}
             <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
                 <h3 class="text-lg font-semibold mb-4">Monthly Deployment Trends</h3>
-                <canvas id="monthlyChart" class="w-full h-full"></canvas>
+                {{-- <canvas id="monthlyChart" class="w-full h-full"></canvas> --}}
+                <div id="monthlyChart" class="w-full h-full"></div>
             </div>
 
         </div>
@@ -96,7 +98,9 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
+    {{-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> --}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0"></script>
 
     <script>
         function formatDateForInput(dateString) {
@@ -127,7 +131,46 @@
 
         });
 
+        function generateColors(count) {
+
+            const palette = [
+                '#003396', '#1750AC', '#3373C4',
+                '#5494DA', '#73B9EE', '#86CEFA',
+                '#02BEFD', '#56CAFB', '#76D3FE'
+            ];
+
+            return Array.from({
+                    length: count
+                }, (_, i) =>
+                palette[i % palette.length]
+            );
+        }
+
+        function generate2ndColors(count) {
+
+            const palette = [
+                '#004c6d',
+                '#255e7e',
+                '#3d708f',
+                '#5383a1',
+                '#6996b3',
+                '#7faac6',
+                '#94bed9',
+                '#abd2ec',
+                '#c1e7ff'
+            ];
+
+            return Array.from({
+                    length: count
+                }, (_, i) =>
+                palette[i % palette.length]
+            );
+        }
+
+
+
         let lineChart, barChart, pieChart, monthlyChart, billingCompanyChart;
+        let industryChart;
 
         function loadMetrics() {
 
@@ -153,42 +196,146 @@
                     // =============================
                     // BILLING VS PAYMENT BAR CHART
                     // =============================
-                    if (billingCompanyChart) billingCompanyChart.destroy();
+                    // if (billingCompanyChart) billingCompanyChart.destroy();
 
-                    billingCompanyChart = new Chart(document.getElementById('billingCompanyChart'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.billing.map(i => i.name),
-                            datasets: [{
-                                    label: 'Total Billed',
-                                    data: data.billing.map(i => i.total_billed),
-                                    backgroundColor: '#3b82f6'
-                                },
-                                {
-                                    label: 'Total Paid',
-                                    data: data.billing.map(i => i.total_paid),
-                                    backgroundColor: '#22c55e'
-                                }
-                            ]
+                    // billingCompanyChart = new Chart(document.getElementById('billingCompanyChart'), {
+                    //     type: 'bar',
+                    //     data: {
+                    //         labels: data.billing.map(i => i.name),
+                    //         datasets: [{
+                    //                 label: 'Total Billed',
+                    //                 data: data.billing.map(i => i.total_billed),
+                    //                 backgroundColor: '#3b82f6'
+                    //             },
+                    //             {
+                    //                 label: 'Total Paid',
+                    //                 data: data.billing.map(i => i.total_paid),
+                    //                 backgroundColor: '#22c55e'
+                    //             }
+                    //         ]
+                    //     },
+                    //     options: {
+                    //         responsive: true,
+                    //         plugins: {
+                    //             legend: {
+                    //                 position: 'top'
+                    //             }
+                    //         },
+                    //         scales: {
+                    //             x: {
+                    //                 stacked: false
+                    //             },
+                    //             y: {
+                    //                 beginAtZero: true
+                    //             }
+                    //         }
+                    //     }
+                    // });
+
+                    // Destroy previous chart if exists
+                    // Destroy previous chart if exists
+                    if (billingCompanyChart) {
+                        billingCompanyChart.destroy();
+                        billingCompanyChart = null;
+                    }
+
+                    // ApexCharts options
+                    const BillingOptions = {
+                        chart: {
+                            type: "bar",
+                            height: 320,
+                            fontFamily: "Inter, sans-serif",
+                            toolbar: {
+                                show: false
+                            }
                         },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top'
+                        series: [{
+                                name: "Total Billed",
+                                data: data.billing.map(i => i.total_billed)
+                            },
+                            {
+                                name: "Total Paid",
+                                data: data.billing.map(i => i.total_paid)
+                            }
+                        ],
+                        colors: ['#3b82f6', '#22c55e'],
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: "70%",
+                                borderRadius: 8,
+                                borderRadiusApplication: "end"
+                            }
+                        },
+                        xaxis: {
+                            categories: data.billing.map(i => i.name),
+                            labels: {
+                                style: {
+                                    fontFamily: "Inter, sans-serif"
                                 }
                             },
-                            scales: {
-                                x: {
-                                    stacked: false
+                            axisBorder: {
+                                show: false
+                            },
+                            axisTicks: {
+                                show: false
+                            }
+                        },
+                        yaxis: {
+                            labels: {
+                                formatter: function(val) {
+                                    return val.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
                                 },
-                                y: {
-                                    beginAtZero: true
+                                style: {
+                                    fontFamily: "Inter, sans-serif"
                                 }
                             }
+                        },
+                        tooltip: {
+                            shared: true,
+                            intersect: false,
+                            style: {
+                                fontFamily: "Inter, sans-serif"
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        legend: {
+                            show: true
+                        },
+                        states: {
+                            hover: {
+                                filter: {
+                                    type: "darken",
+                                    value: 1
+                                }
+                            }
+                        },
+                        fill: {
+                            opacity: 1
+                        },
+                        grid: {
+                            show: false,
+                            strokeDashArray: 4,
+                            padding: {
+                                left: 2,
+                                right: 2,
+                                top: -14
+                            }
                         }
-                    });
+                    };
 
+                    // Render chart
+                    billingCompanyChart = new ApexCharts(
+                        document.getElementById("billingCompanyChart"),
+                        BillingOptions
+                    );
+
+                    billingCompanyChart.render();
                     // =============================
                     // DAILY LINE CHART
                     // =============================
@@ -211,148 +358,320 @@
                     // TOP COMPANIES BAR
                     // =============================                    
 
-                    if (barChart) barChart.destroy();
+                    // if (barChart) barChart.destroy();
 
-                    const ctx = document.getElementById('companyChart').getContext('2d');
+                    // const ctx = document.getElementById('companyChart').getContext('2d');
 
-                    const total = data.topCompanies.length;
+                    // const total = data.topCompanies.length;
 
-                    // Generate gradient colors automatically
-                    const gradients = data.topCompanies.map((c, i) => {
+                    // // Generate gradient colors automatically
+                    // const gradients = data.topCompanies.map((c, i) => {
 
-                        const hue = Math.round((360 / total) * i);
+                    //     const hue = Math.round((360 / total) * i);
 
-                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    //     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
 
-                        gradient.addColorStop(0, `hsl(${hue}, 75%, 60%)`);
-                        gradient.addColorStop(1, `hsl(${hue}, 75%, 40%)`);
+                    //     gradient.addColorStop(0, `hsl(${hue}, 75%, 60%)`);
+                    //     gradient.addColorStop(1, `hsl(${hue}, 75%, 40%)`);
 
-                        return gradient;
+                    //     return gradient;
+                    // });
+
+                    // barChart = new Chart(ctx, {
+                    //     type: 'bar',
+                    //     data: {
+                    //         labels: data.topCompanies.map(c => c.name),
+                    //         datasets: [{
+                    //             label: 'Deployments',
+                    //             data: data.topCompanies.map(c => c.deployments_count),
+                    //             backgroundColor: gradients,
+                    //             borderRadius: 6,
+                    //             borderSkipped: false
+                    //         }]
+                    //     },
+                    //     options: {
+                    //         responsive: true,
+                    //         plugins: {
+                    //             legend: {
+                    //                 display: false
+                    //             }
+                    //         },
+                    //         scales: {
+                    //             y: {
+                    //                 beginAtZero: true
+                    //             }
+                    //         }
+                    //     }
+                    // });
+
+                    if (barChart) {
+                        barChart.destroy();
+                        barChart = null;
+                    }
+
+                    const randomColors = data.topCompanies.map(() => {
+                        const r = Math.floor(Math.random() * 256);
+                        const g = Math.floor(Math.random() * 256);
+                        const b = Math.floor(Math.random() * 256);
+                        return `rgb(${r}, ${g}, ${b})`;
                     });
 
-                    barChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: data.topCompanies.map(c => c.name),
-                            datasets: [{
-                                label: 'Deployments',
-                                data: data.topCompanies.map(c => c.deployments_count),
-                                backgroundColor: gradients,
-                                borderRadius: 6,
-                                borderSkipped: false
-                            }]
+                    const CompanyOptions = {
+                        chart: {
+                            type: "bar",
+                            height: 320,
+                            fontFamily: "Inter, sans-serif",
+                            toolbar: {
+                                show: false
+                            }
                         },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: false
+                        series: [{
+                            name: data.topCompanies.length > 0 ? "Deployments" : "No Data",
+                            data: data.topCompanies.map(c => c.deployments_count)
+                        }],
+                        colors: randomColors,
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: "70%",
+                                borderRadius: 8,
+                                borderRadiusApplication: "end"
+                            }
+                        },
+                        xaxis: {
+                            categories: data.topCompanies.map(c => c.name),
+                            labels: {
+                                style: {
+                                    fontFamily: "Inter, sans-serif"
                                 }
                             },
-                            scales: {
-                                y: {
-                                    beginAtZero: true
+                            axisBorder: {
+                                show: false
+                            },
+                            axisTicks: {
+                                show: false
+                            }
+                        },
+                        yaxis: {
+                            labels: {
+                                style: {
+                                    fontFamily: "Inter, sans-serif"
                                 }
                             }
+                        },
+                        tooltip: {
+                            shared: true,
+                            intersect: false,
+                            style: {
+                                fontFamily: "Inter, sans-serif"
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        legend: {
+                            show: true
+                        },
+                        states: {
+                            hover: {
+                                filter: {
+                                    type: "darken",
+                                    value: 1
+                                }
+                            }
+                        },
+                        fill: {
+                            opacity: 1
+                        },
+                        grid: {
+                            show: false,
+                            strokeDashArray: 4,
+                            padding: {
+                                left: 2,
+                                right: 2,
+                                top: -14
+                            }
                         }
-                    });
+                    };
+
+                    // Render chart
+                    barChart = new ApexCharts(
+                        document.getElementById("companyChart"),
+                        CompanyOptions
+                    );
+
+                    barChart.render();
 
                     // =============================
                     // INDUSTRY PIE
                     // =============================
-                    if (pieChart) pieChart.destroy();
+                    // if (pieChart) pieChart.destroy();
 
-                    pieChart = new Chart(document.getElementById('industryChart'), {
-                        type: 'pie',
-                        data: {
-                            labels: Object.keys(data.industryData),
-                            datasets: [{
-                                data: Object.values(data.industryData),
-                            }]
+                    // pieChart = new Chart(document.getElementById('industryChart'), {
+                    //     type: 'pie',
+                    //     data: {
+                    //         labels: Object.keys(data.industryData),
+                    //         datasets: [{
+                    //             data: Object.values(data.industryData),
+                    //         }]
+                    //     },
+                    //     options: {
+                    //         responsive: true,
+                    //         maintainAspectRatio: true, // fills the div height
+                    //         plugins: {
+                    //             legend: {
+                    //                 position: 'right'
+                    //             }
+                    //         }
+                    //     }
+                    // });                    
+
+                    const getNeutralPrimaryColor = () => {
+                        const computedStyle = getComputedStyle(document.documentElement);
+                        return computedStyle.getPropertyValue('--color-neutral-primary').trim() || "#E5E7EB";
+                    };
+
+                    const neutralPrimaryColor = getNeutralPrimaryColor();
+
+                    if (industryChart) {
+                        industryChart.destroy();
+                    }
+
+                    // convert your existing data
+                    const labels = Object.keys(data.industryData);
+                    const values = Object.values(data.industryData).map(Number);
+
+                    const options = {
+                        series: values,
+                        labels: labels,
+                        colors: generateColors(labels.length),
+                        chart: {
+                            height: 420,
+                            width: "100%",
+                            type: "pie",
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true, // fills the div height
-                            plugins: {
-                                legend: {
-                                    position: 'right'
+                        stroke: {
+                            colors: [neutralPrimaryColor],
+                        },
+                        plotOptions: {
+                            pie: {
+                                labels: {
+                                    show: true
+                                },
+                                size: "100%",
+                                dataLabels: {
+                                    offset: -25
                                 }
                             }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function(val) {
+                                return val.toFixed(1) + "%";
+                            },
+                            style: {
+                                fontFamily: "Inter, sans-serif",
+                            }
+                        },
+                        legend: {
+                            position: "right",
+                            fontFamily: "Inter, sans-serif"
                         }
-                    });
+                    };
+
+                    if (document.getElementById("industryChart") && typeof ApexCharts !== "undefined") {
+                        industryChart = new ApexCharts(
+                            document.getElementById("industryChart"),
+                            options
+                        );
+
+                        industryChart.render();
+                    }
 
                     // =============================
-                    // MONTHLY BAR
+                    // MONTHLY AREA CHART
                     // =============================
-                    // if (monthlyChart) monthlyChart.destroy();
 
-                    // monthlyChart = new Chart(document.getElementById('monthlyChart'), {
-                    //     type: 'bar',
-                    //     data: {
-                    //         labels: data.monthlyDeployments.map(m => {
-                    //             const date = new Date(m.year, m.month - 1);
-                    //             return date.toLocaleString('default', {
-                    //                 month: 'short',
-                    //                 year: 'numeric'
-                    //             });
-                    //         }),
-                    //         datasets: [{
-                    //             label: 'Deployments',
-                    //             data: data.monthlyDeployments.map(m => m.total),
-                    //             backgroundColor: '#14b8a6'
-                    //         }]
-                    //     }
-                    // });
+                    const getBrandColor = () => {
+                        const computedStyle = getComputedStyle(document.documentElement);
+                        return computedStyle.getPropertyValue('--color-fg-brand').trim() || "#1447E6";
+                    };
+
+                    const brandColor = getBrandColor();
 
                     if (monthlyChart) monthlyChart.destroy();
 
-                    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-
-                    const months = data.monthlyDeployments.length;
-
-                    const monthlyGradients = data.monthlyDeployments.map((m, i) => {
-
-                        const hue = Math.round((360 / months) * i);
-
-                        const gradient = monthlyCtx.createLinearGradient(0, 0, 0, 400);
-                        gradient.addColorStop(0, `hsl(${hue}, 75%, 65%)`);
-                        gradient.addColorStop(1, `hsl(${hue}, 75%, 45%)`);
-
-                        return gradient;
+                    // categories (months)
+                    const categories = data.monthlyDeployments.map(m => {
+                        const date = new Date(m.year, m.month - 1);
+                        return date.toLocaleString('default', {
+                            month: 'short',
+                            year: 'numeric'
+                        });
                     });
 
-                    monthlyChart = new Chart(monthlyCtx, {
-                        type: 'line',
-                        data: {
-                            labels: data.monthlyDeployments.map(m => {
-                                const date = new Date(m.year, m.month - 1);
-                                return date.toLocaleString('default', {
-                                    month: 'short',
-                                    year: 'numeric'
-                                });
-                            }),
-                            datasets: [{
-                                label: 'Deployments',
-                                data: data.monthlyDeployments.map(m => m.total),
-                                backgroundColor: monthlyGradients,
-                                borderRadius: 6,
-                                borderSkipped: false
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
+                    // values
+                    const MonthlyDepValues = data.monthlyDeployments.map(m => Number(m.total));
+
+                    const MonthlyDepOptions = {
+                        chart: {
+                            height: 350,
+                            type: "area",
+                            fontFamily: "Inter, sans-serif",
+                            toolbar: {
+                                show: false
                             }
+                        },
+                        series: [{
+                            name: "Deployments",
+                            data: MonthlyDepValues,
+                            color: brandColor
+                        }],
+                        xaxis: {
+                            categories: categories,
+                            axisBorder: {
+                                show: false
+                            },
+                            axisTicks: {
+                                show: false
+                            }
+                        },
+                        tooltip: {
+                            enabled: true
+                        },
+                        fill: {
+                            type: "gradient",
+                            gradient: {
+                                opacityFrom: 0.55,
+                                opacityTo: 0,
+                                gradientToColors: [brandColor]
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        stroke: {
+                            width: 4
+                        },
+                        grid: {
+                            strokeDashArray: 4,
+                            padding: {
+                                left: 2,
+                                right: 2,
+                                top: 0
+                            }
+                        },
+                        yaxis: {
+                            min: 0
                         }
-                    });
+                    };
+
+                    monthlyChart = new ApexCharts(
+                        document.querySelector("#monthlyChart"),
+                        MonthlyDepOptions
+                    );
+
+                    monthlyChart.render();
 
                     // =============================
                     // TOP PERFORMERS LIST

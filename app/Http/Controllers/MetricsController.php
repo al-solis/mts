@@ -154,7 +154,7 @@ class MetricsController extends Controller
             ->selectRaw('
         YEAR(deployments.start_date) as year,
         MONTH(deployments.start_date) as month,
-        COUNT(*) as total
+        CAST(COUNT(*) AS INT) as total
     ')
             ->groupBy(
                 DB::raw('YEAR(deployments.start_date)'),

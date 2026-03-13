@@ -108,3 +108,5 @@ php artisan queue:work --daemon
 
 
 php artisan make:command CleanupResumeFiles
+
+npm install apexcharts@3.46.0 --save
