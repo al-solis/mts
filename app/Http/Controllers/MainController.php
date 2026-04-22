@@ -11,13 +11,13 @@ use App\Models\Resume;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\JobPosting;
-use App\Models\Setting;
+use App\Models\setting;
 
 class MainController extends Controller
 {
     public function index()
     {
-        $minMatch = Setting::value('minimum_match_percentage') ?? 70;
+        $minMatch = setting::value('minimum_match_percentage') ?? 70;
 
         $totalApplicants = Resume::count();
         $totalDeployments = Deployment::where('status', 1)->count();
