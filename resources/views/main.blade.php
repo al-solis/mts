@@ -2,7 +2,7 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
 
-    <div class="p-6 space-y-6 bg-gray-50">
+    <div class="p-6 space-y-6 bg-gray-100">
 
         <div>
             <h1 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h1>
@@ -153,25 +153,46 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-xl shadow">
                 <h3 class="text-lg font-semibold mb-4">Top Matches</h3>
-                <ul class="space-y-3 text-sm">
+                <ul class="space-y-1 text-sm">
                     @forelse($topMatches as $match)
-                        <li>
-                            <div class="flex justify-between mb-1">
-                                <span
-                                    class="truncate max-w-[200px]">{{ $match->applicant_name ?? 'Resume ' . $match->id }}</span>
-                                <span class="font-medium">{{ number_format($match->match_percentage, 0) }}%</span>
-                            </div>
-                            <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                @php
-                                    $matchColor = match (true) {
-                                        $match->match_percentage >= 90 => 'bg-green-600',
-                                        $match->match_percentage >= 80 => 'bg-blue-900',
-                                        $match->match_percentage >= 70 => 'bg-yellow-500',
-                                        default => 'bg-gray-600',
-                                    };
-                                @endphp
-                                <div class="{{ $matchColor }} h-2 rounded-full transition-all duration-500"
-                                    style="width: {{ $match->match_percentage }}%"></div>
+                        <li class="p-1 rounded-lg hover:bg-gray-50">
+                            <div class="flex items-center gap-3">
+
+                                <!-- Avatar -->
+                                <div class="flex-shrink-0">
+                                    <img src="{{ $match->photo ? '/storage/' . $match->photo : '/images/avatar.png' }}"
+                                        class="w-12 h-12 rounded-full object-cover">
+                                </div>
+
+                                <!-- Name + Percentage -->
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="truncate font-medium text-gray-700">
+                                            {{ ucwords(strtolower($match->applicant_name)) ?? 'Resume ' . $match->id }}
+                                        </span>
+
+                                        <span class="text-xs font-semibold text-gray-600">
+                                            {{ number_format($match->match_percentage, 0) }}%
+                                        </span>
+                                    </div>
+
+                                    <!-- Progress -->
+                                    @php
+                                        $matchColor = match (true) {
+                                            $match->match_percentage >= 90 => 'bg-green-600',
+                                            $match->match_percentage >= 80 => 'bg-blue-600',
+                                            $match->match_percentage >= 70 => 'bg-yellow-500',
+                                            default => 'bg-gray-500',
+                                        };
+                                    @endphp
+
+                                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                        <div class="{{ $matchColor }} h-2 rounded-full transition-all duration-500"
+                                            style="width: {{ $match->match_percentage }}%">
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </li>
                     @empty

@@ -36,10 +36,10 @@ class MainController extends Controller
         // Get recent deployments
         $deployments = Deployment::with(['resume'])
             ->latest()
-            ->take(2)
+            ->take(4)
             ->get()
             ->map(function ($d) {
-                return $d->resume->applicant_name .
+                return ucwords(strtolower($d->resume->applicant_name)) .
                     ' deployed to ' .
                     ($d->resume->job->company->name ?? 'Unknown Company');
             });
@@ -47,23 +47,23 @@ class MainController extends Controller
         // Get recent appointments
         $appointments = Appointment::with('resume')
             ->latest()
-            ->take(2)
+            ->take(3)
             ->get()
             ->map(function ($a) {
-                return 'Appointment scheduled with ' . ($a->resume->applicant_name ?? 'Unknown Applicant');
+                return 'Appointment scheduled with ' . ucwords(strtolower($a->resume->applicant_name)) ?? 'Unknown Applicant';
             });
 
         // Get recent resumes
         $newResumes = Resume::latest()
-            ->take(1)
+            ->take(3)
             ->get()
             ->map(function ($r) {
-                return 'Resume uploaded: ' . ($r->applicant_name ?? 'Unknown Applicant');
+                return 'Resume uploaded: ' . ucwords(strtolower($r->applicant_name)) ?? 'Unknown Applicant';
             });
 
-        $recentActivities = $deployments->concat($appointments)->concat($newResumes)->take(5);
+        $recentActivities = $deployments->concat($appointments)->concat($newResumes)->take(10);
 
-        $topMatches = Resume::orderBy('match_percentage', 'desc')->take(3)->get();
+        $topMatches = Resume::orderBy('match_percentage', 'desc')->take(5)->get();
 
         return view(
             'main',

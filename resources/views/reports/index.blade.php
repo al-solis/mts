@@ -1,7 +1,7 @@
 @extends('dashboard')
 @section('content')
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8  bg-gray-100">
         <!-- Header -->
         <div class="mb-6">
             <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Reports</h1>

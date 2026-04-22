@@ -5,7 +5,7 @@
         use Carbon\Carbon;
     @endphp
 
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6  bg-gray-100">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">
@@ -164,24 +164,22 @@
             @forelse ($deployments as $deploy)
                 <div
                     class="flex items-center justify-between bg-white border border-gray-200 rounded-xl border-l-4 border-l-indigo-500 p-4 mb-3 shadow-sm hover:shadow-md transition">
-                    <div class="flex gap-4">
-                        {{-- <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd"
-                                    d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z" />
-                            </svg>
-                        </div> --}}
 
-                        <div>
-                            @php
-                                $status = [
-                                    1 => ['text' => 'Active', 'color' => 'green'],
-                                    0 => ['text' => 'Inactive', 'color' => 'gray'],
-                                    2 => ['text' => 'Cancelled', 'color' => 'red'],
-                                ];
-                            @endphp
+                    <div class="flex items-center gap-3">
+                        @php
+                            $status = [
+                                1 => ['text' => 'Active', 'color' => 'green'],
+                                0 => ['text' => 'Inactive', 'color' => 'gray'],
+                                2 => ['text' => 'Cancelled', 'color' => 'red'],
+                            ];
+                        @endphp
+                        <div class="flex-shrink-0">
+                            <img src="{{ $deploy->resume->photo ? '/storage/' . $deploy->resume->photo : '/images/avatar.png' }}"
+                                class="w-12 h-12 rounded-full object-cover">
+                        </div>
+                        <div class="flex-1">
                             <p class="font-semibold text-gray-900">
-                                {{ $deploy->resume->applicant_name }}
+                                {{ ucwords(strtolower($deploy->resume->applicant_name)) ?? 'Unknown Applicant' }}
                                 <span
                                     class="ml-2 px-2 py-0.5 text-xs rounded-full bg-{{ $status[$deploy->status]['color'] }}-100 text-{{ $status[$deploy->status]['color'] }}-700">
                                     {{ $status[$deploy->status]['text'] }}

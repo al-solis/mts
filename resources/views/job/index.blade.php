@@ -4,7 +4,7 @@
         use Illuminate\Support\Str;
     @endphp
 
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6  bg-gray-100">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">

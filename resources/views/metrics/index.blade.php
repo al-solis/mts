@@ -1,7 +1,7 @@
 @extends('dashboard')
 @section('content')
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6 bg-gray-100">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">
@@ -56,9 +56,9 @@
 
         {{-- ================= CHART SECTION ================= --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {{-- Billed vs Payment per Company --}}
+            {{-- Billed vs Collected per Company --}}
             <div class="bg-white rounded-xl shadow p-6 sm:col-span-2">
-                <h3 class="text-lg font-semibold mb-4">Billed vs Payment per Company</h3>
+                <h3 class="text-lg font-semibold mb-4">Billed vs Collected per Company</h3>
                 <div id="billingCompanyChart" class="w-full h-full"></div>
             </div>
 
@@ -100,7 +100,8 @@
 
     {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
     {{-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> --}}
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0"></script> --}}
+    <script src="{{ asset('assets/js/apexcharts.min.js') }}"></script>
 
     <script>
         function formatDateForInput(dateString) {
@@ -254,11 +255,12 @@
                                 data: data.billing.map(i => i.total_billed)
                             },
                             {
-                                name: "Total Paid",
+                                name: "Total Collected",
                                 data: data.billing.map(i => i.total_paid)
                             }
                         ],
                         colors: ['#3b82f6', '#22c55e'],
+
                         plotOptions: {
                             bar: {
                                 horizontal: false,
@@ -299,7 +301,7 @@
                             intersect: false,
                             style: {
                                 fontFamily: "Inter, sans-serif"
-                            }
+                            },
                         },
                         dataLabels: {
                             enabled: false
@@ -419,7 +421,7 @@
                     const CompanyOptions = {
                         chart: {
                             type: "bar",
-                            height: 320,
+                            height: 350,
                             fontFamily: "Inter, sans-serif",
                             toolbar: {
                                 show: false
@@ -430,9 +432,12 @@
                             data: data.topCompanies.map(c => c.deployments_count)
                         }],
                         colors: randomColors,
+                        // theme: {
+                        //     palette: 'palette1'
+                        // },
                         plotOptions: {
                             bar: {
-                                horizontal: false,
+                                horizontal: true,
                                 columnWidth: "70%",
                                 borderRadius: 8,
                                 borderRadiusApplication: "end"

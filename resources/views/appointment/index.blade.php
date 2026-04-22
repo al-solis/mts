@@ -5,7 +5,7 @@
         use Carbon\Carbon;
     @endphp
 
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6  bg-gray-100">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">
@@ -165,16 +165,18 @@
             @forelse ($upcoming as $appt)
                 <div class="flex items-center justify-between border rounded-xl p-4 mb-3">
                     <div class="flex gap-4">
-                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 16 16">
+                        <div class="w-12 h-12 rounded-lg bg-white-100 flex items-center justify-center">
+                            {{-- <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 16 16">
                                 <path fill-rule="evenodd"
                                     d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z" />
-                            </svg>
+                            </svg> --}}
+                            <img src="{{ $appt->resume->photo ? '/storage/' . $appt->resume->photo : '/images/avatar.png' }}"
+                                class="w-12 h-12 rounded-full object-cover">
                         </div>
 
                         <div>
                             <p class="font-semibold text-gray-900">
-                                {{ $appt->resume->applicant_name }}
+                                {{ ucwords(strtolower($appt->resume->applicant_name)) ?? 'Unknown Applicant' }}
                                 <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
                                     {{ $appt->meeting_type == 2 ? 'Online' : 'In-person' }}
                                 </span>
@@ -207,7 +209,8 @@
                             </p>
 
                             <div class="flex gap-4 text-xs text-gray-500 mt-1">
-                                <span><i class="bi bi-calendar"></i> {{ $appt->interview_date->format('m/d/Y') }}</span>
+                                <span><i class="bi bi-calendar-date"></i>
+                                    {{ $appt->interview_date->format('m/d/Y') }}</span>
                                 <span><i class="bi bi-clock"></i>
                                     {{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
                             </div>
@@ -260,18 +263,21 @@
                 @forelse ($completed as $appt)
                     <div class="flex items-center justify-between border rounded-xl p-4 mb-3">
                         <div class="flex gap-4">
-                            <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 16 16">
+                            <div class="w-12 h-12 rounded-lg bg-white-100 flex items-center justify-center">
+                                <img src="{{ $appt->resume->photo ? '/storage/' . $appt->resume->photo : '/images/avatar.png' }}"
+                                    class="w-12 h-12 rounded-full object-cover">
+
+                                {{-- <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 16 16">
                                     <path
                                         d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0" />
                                     <path
                                         d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z" />
-                                </svg>
+                                </svg> --}}
                             </div>
 
                             <div>
                                 <p class="font-semibold">
-                                    {{ $appt->resume->applicant_name }}
+                                    {{ ucwords(strtolower($appt->resume->applicant_name)) ?? 'Unknown Applicant' }}
                                     <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                                         Completed
                                     </span>
@@ -307,9 +313,9 @@
                                 </p>
                                 <div class="flex gap-4 text-xs text-gray-500 mt-1">
                                     <span><i
-                                            class="bi bi-calendar"></i>{{ $appt->interview_date->format('m/d/Y') }}</span>
+                                            class="bi bi-calendar-date"></i>{{ ' ' . $appt->interview_date->format('m/d/Y') }}</span>
                                     <span><i
-                                            class="bi bi-clock"></i>{{ Carbon::parse($appt->interview_time)->format('H:i') }}</span>
+                                            class="bi bi-clock"></i>{{ ' ' . Carbon::parse($appt->interview_time)->format('H:i') }}</span>
                                 </div>
                                 <p class="italic text-sm text-gray-500 mt-1">
                                     {{ $appt->notes }}

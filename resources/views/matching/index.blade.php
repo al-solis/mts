@@ -1,6 +1,6 @@
 @extends('dashboard')
 @section('content')
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6  bg-gray-100">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">
@@ -282,14 +282,14 @@
                 <div class="border rounded-xl p-4 shadow-sm bg-white">
                     <div class="flex justify-between items-start">
                             <div class="flex items-start gap-3">
-                                <div class="p-2 bg-gray-100 rounded-lg">
+                                <div class="p-2 bg-white-100 rounded-lg">
                                 <img src="${row.photo ? '/storage/' + row.photo : '/images/avatar.png'}"
                                     class="w-12 h-12 rounded-full object-cover">
                             </div>
                             
                             <div>                                
                                 <div class="sm-col-span-1 font-semibold text-gray-900">
-                                    ${row.applicant || 'Unknown Applicant'}
+                                    ${row.applicant.toLowerCase().replace(/\p{L}+/gu, word=> word.charAt(0).toUpperCase() + word.slice(1)) || 'Unknown Applicant'}
                                 </div>                                 
                                 <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-1">
                                     <div class="text-sm ${matchColor} mr-2">
