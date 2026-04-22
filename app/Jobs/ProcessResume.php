@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\Resume;
+use App\Models\resume as Resume;
 use App\Models\JobPosting;
 use App\Models\GeocodeCache;
 use App\Services\AI\ResumeExtractionService;
@@ -13,7 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Setting;
+use App\Models\setting as Setting;
 use App\Http\Controllers\ResumeController;
 
 class ProcessResume implements ShouldQueue

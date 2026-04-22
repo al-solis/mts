@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Models\Resume;
+use App\Models\resume as Resume;
 use App\Models\JobPosting;
-use App\Models\Setting;
+use App\Models\setting as Setting;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Auth;
