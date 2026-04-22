@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\JobPosting;
-use App\Models\company;
-use App\Models\setting;
+use App\Models\company as Company;
+use App\Models\setting as Setting;
 use Illuminate\Support\Facades\Auth;
 
 class JobController extends Controller

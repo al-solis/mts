@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Deployment;
-use App\Models\Resume;
-use App\Models\Job;
-use App\Models\Company;
+use App\Models\deployment as Deployment;
+use App\Models\resume as Resume;
+use App\Models\JobPosting;
+use App\Models\company as Company;
 
 class DeploymentController extends Controller
 {

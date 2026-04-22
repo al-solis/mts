@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\JobPosting;
-use App\Models\Resume;
-use App\Models\Company;
-use App\Models\appointment;
+use App\Models\resume as Resume;
+use App\Models\company as Company;
+use App\Models\appointment as Appointment;
 
 class AppointmentController extends Controller
 {
@@ -94,7 +94,7 @@ class AppointmentController extends Controller
     public function scheduleAppointment($id)
     {
         $resume = Resume::findOrFail($id);
-        appointment::create([
+        Appointment::create([
             'resume_id' => $resume->id,
             'meeting_type' => '2', // online meeting
             'interview_round' => 1,
@@ -125,7 +125,7 @@ class AppointmentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $appointment = appointment::create([
+        $appointment = Appointment::create([
             'resume_id' => $request->input('applicant_id'),
             'meeting_type' => $request->input('meeting_type'),
             'interview_round' => $request->input('interview_round'),
@@ -155,7 +155,7 @@ class AppointmentController extends Controller
             'edit_notes' => 'nullable|string'
         ]);
 
-        $appointment = appointment::findOrFail($id);
+        $appointment = Appointment::findOrFail($id);
         $appointment->update([
             'meeting_type' => $request->input('edit_meeting_type'),
             'interview_round' => $request->input('edit_interview_round'),
@@ -181,7 +181,7 @@ class AppointmentController extends Controller
 
     public function markAsComplete($id)
     {
-        $appointment = appointment::findOrFail($id);
+        $appointment = Appointment::findOrFail($id);
         $appointment->update([
             'status' => 1, // Mark as completed
             'updated_by' => Auth::id(),
@@ -196,7 +196,7 @@ class AppointmentController extends Controller
 
     public function markAsFailed($id)
     {
-        $appointment = appointment::findOrFail($id);
+        $appointment = Appointment::findOrFail($id);
         $appointment->update([
             'tag' => 2, // Mark as failed
             'status' => 1, // Mark as completed
@@ -212,7 +212,7 @@ class AppointmentController extends Controller
 
     public function markAsPassed($id)
     {
-        $appointment = appointment::findOrFail($id);
+        $appointment = Appointment::findOrFail($id);
         $appointment->update([
             'tag' => 1, // Mark as passed
             'status' => 1, // Mark appointment as completed
@@ -228,7 +228,7 @@ class AppointmentController extends Controller
 
     public function scheduleNextRound($id)
     {
-        $appointment = appointment::findOrFail($id);
+        $appointment = Appointment::findOrFail($id);
         $appointment->update([
             'interview_round' => $appointment->interview_round + 1,
             'interview_date' => now()->addDays(3),

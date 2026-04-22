@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use App\Models\Resume;
+use App\Models\resume as Resume;
 use App\Models\JobPosting;
-use App\Models\setting;
-use App\Models\appointment;
-use App\Models\Company;
+use App\Models\setting as Setting;
+use App\Models\appointment as Appointment;
+use App\Models\company as Company;
 use App\Jobs\ProcessResumeJob;
 
 class ResumeController extends Controller
