@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use DB;
-use App\Models\Deployment;
-use App\Models\Resume;
-use App\Models\Appointment;
-use App\Models\Company;
+use App\Models\deployment as Deployment;
+use App\Models\resume as Resume;
+use App\Models\appointment as Appointment;
+use App\Models\company as Company;
 use App\Models\JobPosting;
 use App\Models\setting;
 
