@@ -25,16 +25,16 @@ class JobPosting extends Model
 
     public function company()
     {
-        return $this->belongsTo(Company::class, 'company_id');
+        return $this->belongsTo(company::class, 'company_id');
     }
 
     public function resumes()
     {
-        return $this->hasMany(Resume::class, 'job_posting_id');
+        return $this->hasMany(resume::class, 'job_posting_id');
     }
 
     public function deployments()
     {
-        return $this->hasManyThrough(Deployment::class, Resume::class, 'job_posting_id', 'resume_id');
+        return $this->hasManyThrough(deployment::class, resume::class, 'job_posting_id', 'resume_id');
     }
 }

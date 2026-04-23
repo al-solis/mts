@@ -22,6 +22,6 @@ class deployment extends Model
 
     public function resume()
     {
-        return $this->belongsTo(Resume::class);
+        return $this->belongsTo(resume::class);
     }
 }
